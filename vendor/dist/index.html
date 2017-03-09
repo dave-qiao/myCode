@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>嗷嗷管家</title>
+  <link rel="shortcut icon" href="images/favicon.ico">
+  <link rel="stylesheet" href="index.2.0.5.css"/>
+</head>
+
+<body>
+<!-- 根-->
+<div id="root"></div>
+
+<!-- 加载地图-->
+<script type="text/javascript" src="//api.map.baidu.com/api?v=2.0&ak=X81ADWczolHigYoqOua4wgG6&s=1"></script>
+
+<!-- 加载鼠标绘制工具-->
+<script type="text/javascript" src="//api.map.baidu.com/library/DrawingManager/1.4/src/DrawingManager_min.js"></script>
+<link rel="stylesheet" href="//api.map.baidu.com/library/DrawingManager/1.4/src/DrawingManager_min.css"/>
+
+<!-- 加载检索信息窗口-->
+<script type="text/javascript"
+        src="//api.map.baidu.com/library/SearchInfoWindow/1.4/src/SearchInfoWindow_min.js"></script>
+<link rel="stylesheet" href="//api.map.baidu.com/library/SearchInfoWindow/1.4/src/SearchInfoWindow_min.css"/>
+
+<!-- 加载客服功能-->
+<script id="zhichiload" src="//www.sobot.com/chat/pc/pc.min.js?sysNum=20631dce86e641aca874c6d50562056f"></script>
+
+<!-- 内置脚本-->
+<script type="text/javascript">
+  window.appSystemConfigInfo = {
+    //正式
+    access_key: '3e04a3cfa3a76682bd723b086b79763d',
+    publisher_key: '6c1034fa711240a0ff971b0998b0134e',
+    "prod": "https://seaguard.o3cloud.cn/1.0/",
+    "mock": "/",
+    'env': 'prod'
+  };
+</script>
+<script src="common.2.0.5.js"></script>
+<script src="vendor.2.0.5.js"></script>
+<script src="chunk-bundle.2.0.5.js"></script>
+<script src="index.2.0.5.js"></script>
+</body>
+</html>

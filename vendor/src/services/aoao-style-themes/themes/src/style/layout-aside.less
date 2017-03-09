@@ -1,0 +1,81 @@
+.layout-aside {
+  width: 80px;
+  background: rgb(40,45,54);
+  position: absolute;
+  overflow: visible;
+  height: 100%;
+  top: 0;
+  z-index: 10;
+  transition: all 0.3s ease;
+
+  .ant-menu-dark {
+    background: rgb(40,45,54);
+  }
+
+  .layout-logo {
+    width: 100%;
+    padding-top: 47px;
+    padding-bottom: 10px;
+    padding-left: 18px;
+    background: url(/images/logo@2x.png) no-repeat center 12px;
+    color: #fff;
+    background-size: 25px;
+    -webkit-transition: all .3s ease;
+    transition: all .3s ease;
+    border-bottom: 1px solid #3a3f46;
+  }
+
+  > .ant-menu {
+    > .ant-menu-submenu {
+      height: 80px;
+      padding: 16px 0 0;
+      box-sizing: border-box;
+      border-bottom: 1px solid #3a3f46;
+      text-align: left;
+      border-top: 1px solid #3a3f46;
+      //左侧一级导航样式
+      > .ant-menu-submenu-title {
+        height: 100%;
+        padding: 0;
+        //隐藏一级箭头
+        &::after {
+          display: none;
+        }
+
+        > span {
+          display: block;
+          width: 100%;
+          height: 100%;
+          //一级导航图标
+          .anticon {
+            display: block;
+          }
+          i{
+            font-size:20px
+          }
+          //一级导航文字
+          .title-text {
+            display: block;
+            width: 100%;
+            color: rgba(255,255,255,0.8);
+            text-align: center;
+          }
+        }
+      }
+      //左侧一级导航选中样式
+      &.ant-menu-submenu-selected {
+        background-color: rgb(88,226,194);
+      }
+    }
+
+    > .ant-menu-item {
+      transition: all 0s ease;
+
+      :hover {
+        background: #2db7f5;
+        color: #fff;
+        transition: all 0s ease;
+      }
+    }
+  }
+}

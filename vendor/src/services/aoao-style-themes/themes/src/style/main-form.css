@@ -1,0 +1,23 @@
+.main-form {
+  padding: 0 30px;
+}
+.main-form .form-divider-header {
+  box-sizing: content-box;
+  position: relative;
+  font-size: 12px;
+  border-bottom: 1px solid #e4e4e4;
+  height: 20px;
+  padding: 10px 10px 10px 10px;
+  width: 103%;
+  margin: -10px -29px 24px -29px;
+}
+.main-form .form-divider-header::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: 0;
+  top: 10px;
+  width: 5px;
+  height: 20px;
+  background-color: #58e2c2;
+}

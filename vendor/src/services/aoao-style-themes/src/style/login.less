@@ -1,0 +1,114 @@
+.login-container {
+  width: 100%;
+  height: 100%;
+  background-image: url('/images/bg_login.jpg');
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  > .ant-form {
+    position: absolute;
+    padding: 20px 15px;
+    border-radius: 4px;
+    left: 50%;
+    top: 50%;
+    transform: ~'translate(-50%,-50%)';
+    background-color: ~'rgba(255,255,255,1)';
+    > h2 {
+      color: rgb(55,55,55);
+      text-align: center;
+      padding-bottom: 15px;
+    }
+    .ant-btn-primary,.ant-btn.other {
+      display: block;
+      width: 87.5%;
+      margin: 4px auto;
+      border: none;
+    }
+    .ant-btn-primary {
+      background-color: rgb(252,119,34);
+
+    }
+
+
+
+    #verify_button {
+      width: 80px;
+      background: none;
+      color: rgb(252,119,34);
+      border: solid 1px rgb(252,119,34);
+      &:disabled{
+        color: #dedede;
+        border:  solid 1px #dedede;
+      }
+    }
+  }
+}
+.login-header,.login-footer {
+  position: fixed;
+  left: 0;
+  width: 100%;
+  font-size: 14px;
+  background-color: ~'rgba(3,3,3,.7)';
+  > .inner {
+    width: 1000px;
+    margin: 0 auto;
+    color: #fff;
+    .left {
+      float: left;
+    }
+    .right {
+      float: right;
+    }
+    a {
+      color: #fff;
+    }
+  }
+}
+.login-header {
+  top: 0;
+  height: 50px;
+  .left {
+    height: 34px;
+    margin-top: 10px;
+    line-height: 34px;
+    padding-left:79px;
+    background-image: ~'url("/images/logo_txt.png")';
+    background-size: 69px 34px ;
+    background-repeat: no-repeat;
+    span {
+      display: inline-block;
+      height: 100%;
+      border-left: solid 1px rgb(114,113,115);
+      padding-left: 10px;
+    }
+  }
+  .right {
+    margin-top: 15px;
+  }
+}
+.login-footer{
+  bottom: 0;
+  height: 120px;
+  .left{
+    margin-top: 35px;
+    li {
+      float: left;
+      margin-left: 15px;
+      h4 {
+        font-size: 16px;
+        margin-bottom: 5px;
+      }
+      a {
+        display: inline-block;
+        margin-right: 4px;
+      }
+    }
+  }
+  .right {
+    margin-top: 14px;
+    padding-top:44px;
+    background-image: ~'url("/images/logo_txt.png")';
+    background-size: 69px 34px ;
+    background-repeat: no-repeat;
+  }
+}

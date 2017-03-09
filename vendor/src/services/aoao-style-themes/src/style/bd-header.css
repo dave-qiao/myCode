@@ -1,0 +1,51 @@
+.bd-header .ant-form > .ant-form-item {
+  margin-bottom: 16px;
+}
+.bd-header .ant-form-item-control {
+  line-height: 38px;
+  position: relative;
+  zoom: 1;
+}
+.bd-header .toggle-button {
+  position: absolute;
+  left: 100%;
+  top: 3px;
+  background-color: #fff;
+  border-color: #58e2c2;
+  color: #58e2c2;
+}
+.bd-header .reflex {
+  text-align: right;
+  padding-right: 2%;
+}
+.bd-header .reflex .reflex-button {
+  color: #58e2c2;
+  border: none;
+  background: #fff;
+  font-weight: 900;
+  font-size: 16px;
+}
+.bd-header .reflex .reflex-button .ant-btn-clicked {
+  border: none ;
+}
+.bd-header .ant-select-dropdown-menu-item-selected,
+.bd-header .ant-select-dropdown-menu-item-selected:hover {
+  font-weight: 700;
+  color: #666;
+  background-color: #58e2c2;
+}
+.bd-header .finance-img {
+  background: url(/images/finance.png) no-repeat center center;
+  background-size: 50%;
+  height: 80px;
+}
+.bd-header .font-size-24 {
+  font-size: 24px;
+}
+.bd-header .font-size-30 {
+  font-size: 30px;
+}
+.bd-header .vertical-style.ant-col-sm-7 {
+  border-right: 1px solid #ccc;
+  margin-right: 10px;
+}

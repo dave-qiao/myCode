@@ -1,0 +1,52 @@
+.layout-container {
+  margin-left: 80px;
+  width: ~"calc(100% - 80px)";
+  position: absolute;
+  z-index: 1;
+  height: 100%;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  .con-breadcrumb {
+    height: 30px;
+    width: 100%;
+    background-color: #fff;
+    z-index: 999;
+    box-sizing: border-box;
+    padding: 7px 0 0 10px;
+    position: absolute;
+    background: #fff;
+  }
+  .ant-btn-primary {
+    color: #fff;
+    background-color: rgb(88,226,194);
+    border-color: rgb(88,226,194);
+    text-align: 'center';
+    margin: 0 20px
+  }
+
+  .ant-pagination-item-active {
+    background-color: rgb(88,226,194);
+    border-color: rgb(88,226,194);
+}
+
+.ant-select-dropdown {
+    background-color: red;
+    border: 1px solid #58e2c2;
+    box-shadow: 0 1px 6px #58e2c2;
+    border-radius: 6px;
+    box-sizing: border-box;
+    z-index: 1050;
+    left: -9999px;
+    top: -9999px;
+    position: absolute;
+    outline: none;
+    overflow: hidden;
+    font-size: 12px;
+}
+
+  .ant-form-item-required:before {
+    display: none ;
+  }
+
+   @import "./con-body.less";
+}

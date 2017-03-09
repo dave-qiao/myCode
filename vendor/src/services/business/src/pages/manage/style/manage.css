@@ -1,0 +1,56 @@
+/**
+ *  Created by dave 17/01/06
+ *  项目管理-样式
+ */
+.retail .navLeftBorder {
+  border-left: 5px solid #58e2c2;
+  height: 20px;
+  line-height: 20px;
+  padding: 0 0 0 8px;
+}
+.retail .navBottomBorder {
+  border-bottom: 1px solid #e4e4e4;
+  height: 7px;
+  margin-bottom: 16px;
+}
+.retail .quality {
+  padding: 25px 0;
+  color: #000;
+}
+.retail .inLine {
+  text-align: center;
+}
+.retail .inLine th {
+  text-align: center;
+}
+.retail .inLine td {
+  text-align: center;
+}
+.rightModuleStyle {
+  padding: 16px;
+  margin: 16px 0 0 16px;
+  background: #FFFFFF;
+  height: 100%;
+}
+.tabs {
+  display: inline-block;
+  padding: 8px 16px;
+  font-size: 14px;
+  background: #fff;
+  border-radius: 5px 5px 0 0;
+  color: #666;
+}
+.tabsActive {
+  display: inline-block;
+  padding: 8px 16px;
+  font-size: 14px;
+  background: #58e2c2;
+  border-radius: 5px 5px 0 0;
+  color: #fff;
+}
+.marginLeft16 {
+  margin-left: 16px;
+}
+.reset a {
+  color: #666;
+}
