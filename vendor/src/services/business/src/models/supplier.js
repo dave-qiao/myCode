@@ -24,7 +24,7 @@ const { err_codeTransform } = window.tempAppTool;
 module.exports = {
   namespace: 'supplierModel',
   state: {
-    city_code: /*JSON.parse(localStorage.getItem('userInfo')).city_code||*/'110000',
+    city_code: '110000',
     // 供应商Id
     biz_info_id: sessionStorage.getItem('biz_info_id') || '',
     // 供应商列表
@@ -67,7 +67,7 @@ module.exports = {
         const { pathname } = location;
         const page = 1;
         const limit = 10;
-
+        const sort = '{"created_at":-1}';
         // 供应商列表
         if (pathname === '/business/supplier/list') {
           dispatch({
@@ -113,7 +113,12 @@ module.exports = {
           dispatch({
             type: 'getSupplierDetailE',
             payload: { biz_info_id },
-          })
+          });
+
+          dispatch({
+            type: 'getServiceCityE',
+            payload: { vendor_id },
+          });
         }
         if (pathname !== '/business/supplier/list/regionalList') {
           const areaList = {
@@ -162,9 +167,26 @@ module.exports = {
     // 增加供应商
     *addSupplierE(params) {
       const result = yield call(addSupplier, params.payload);
-      if (result.id) {
-        message.success('添加成功');
-        location.href = '/#/business/supplier/list';
+      console.log(result, 'result');
+      const city_code = params.payload.city_code;
+      if (result) {
+        if (result.id) {
+          message.success('添加成功');
+          location.href = '/#/business/supplier/list';
+          const _accountInfo = window.getStorageItem('accountInfo') || '{}';
+          const { vendor_id } = JSON.parse(_accountInfo);
+          params.payload = {
+            vendor_id: vendor_id,
+            city_code: city_code,
+          }
+          const supplierList = yield call(getSupplierList, params.payload);
+          yield put({
+            type: 'getSupplierListR',
+            payload: supplierList,
+          })
+        }
+      } else {
+        message.error(`请检查该供应商是否已经添加`, 2);
       }
     },
 
@@ -172,7 +194,6 @@ module.exports = {
     *getVendorSupplierE(params) {
       const value = yield call(getVendorSupplier, params.payload);
       const VendorSupplierList = value.data.data;
-
       yield put({
         type: 'getVendorSupplierR',
         payload: VendorSupplierList,
@@ -182,7 +203,6 @@ module.exports = {
     // 编辑供应商信息详情
     *editSupplierDetailE(params) {
       const result = yield call(editSupplierDetail, params.payload);
-
     },
 
     // 服务商关闭业务
@@ -226,7 +246,22 @@ module.exports = {
       const result = yield call(submitAdd, params.payload);
       if (result) {
         message.success('添加成功');
-        location.href = '/#/business/supplier/list/regionalList';
+        /*location.href = '/#/business/supplier/list/regionalList';*/
+
+        params.payload.getValue = {
+          vendor_id: params.payload.values.vendor_id,
+          supply_vendor_id: params.payload.values.supply_vendor_id,
+          city_code: params.payload.values.city_code,
+          sort: '{"created_at":-1}',
+          page: 1,
+          limit: 10,
+        };
+
+        const areaList = yield call(getAreas, params.payload.getValue);
+        yield put({
+          type: 'getAreaStateR',
+          payload: areaList,
+        });
       } else {
         message.error('添加失败,已经存在');
       }
@@ -302,10 +337,9 @@ module.exports = {
     // 查询某服务商所有供应商列表
     getVendorSupplierR(state, action){
       const { VendorSupplierList } = state;
-      Object.assign(VendorSupplierList, action.payload);
       return {
         ...state,
-        VendorSupplierList,
+        VendorSupplierList: action.payload,
       }
     },
 

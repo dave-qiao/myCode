@@ -18,37 +18,37 @@ const subRoutes = [
   },
 
   /*{
-    path: 'area',
-    childRoutes: [{
-      path: 'list',
-      getComponent: (location, callback) => {
-        require.ensure([], (require) => {
-          callback(null, require('./pages/area/list'));
-        })
-      },
-    }, {
-      path: 'list/edit',
-      getComponent: (location, callback) => {
-        require.ensure([], (require) => {
-          callback(null, require('./pages/area/list/edit'));
-        })
-      },
-    }, {
-      path: 'list/add',
-      getComponent: (location, callback) => {
-        require.ensure([], (require) => {
-          callback(null, require('./pages/area/list/add'));
-        })
-      },
-    }, {
-      path: 'list/detail',
-      getComponent: (location, callback) => {
-        require.ensure([], (require) => {
-          callback(null, require('./pages/area/list/detail'));
-        })
-      },
-    }]
-  },*/
+   path: 'area',
+   childRoutes: [{
+   path: 'list',
+   getComponent: (location, callback) => {
+   require.ensure([], (require) => {
+   callback(null, require('./pages/area/list'));
+   })
+   },
+   }, {
+   path: 'list/edit',
+   getComponent: (location, callback) => {
+   require.ensure([], (require) => {
+   callback(null, require('./pages/area/list/edit'));
+   })
+   },
+   }, {
+   path: 'list/add',
+   getComponent: (location, callback) => {
+   require.ensure([], (require) => {
+   callback(null, require('./pages/area/list/add'));
+   })
+   },
+   }, {
+   path: 'list/detail',
+   getComponent: (location, callback) => {
+   require.ensure([], (require) => {
+   callback(null, require('./pages/area/list/detail'));
+   })
+   },
+   }]
+   },*/
 
   {
     path: 'sign',
@@ -222,28 +222,7 @@ const subRoutes = [
         })
       },
     },
-    childRoutes: [/*{
-      path: 'module',
-      getComponent: (location, callback) => {
-        require.ensure([], (require) => {
-          callback(null, require('./pages/manage/module'));
-        })
-      },
-    }, {
-      path: 'module/:activeModule',
-      getComponent: (location, callback) => {
-        require.ensure([], (require) => {
-          callback(null, require('./pages/manage/module'));
-        })
-      },
-    }, {
-      path: 'module/:activeModule/:hideTabsMenu',
-      getComponent: (location, callback) => {
-        require.ensure([], (require) => {
-          callback(null, require('./pages/manage/module'));
-        })
-      },
-    },*/ {
+    childRoutes: [{
       //直营模块
       path: 'retail',
       getComponent: (location, callback) => {
@@ -253,7 +232,7 @@ const subRoutes = [
       },
     }, {
       //加盟模块
-      path: 'affiliates',
+      path: 'affiliate',
       getComponent: (location, callback) => {
         require.ensure([], (require) => {
           callback(null, require('./pages/manage/affiliates'));
@@ -275,7 +254,7 @@ const subRoutes = [
           callback(null, require('./pages/manage/components/retail/signed'));
         })
       },
-    },{
+    }, {
       //直营订单分单规则模块
       path: 'retail/orderDispatchRules',
       getComponent: (location, callback) => {
@@ -283,7 +262,7 @@ const subRoutes = [
           callback(null, require('./pages/manage/components/orderDispatchRules'));
         })
       },
-    },{
+    }, {
       //直营骑士分单规则模块
       path: 'retail/knightDispatchRules',
       getComponent: (location, callback) => {

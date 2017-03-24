@@ -1,50 +1,14 @@
 import React, { Component } from 'react';
 import { connect } from 'dva';
-import { Row, Col, Input, Button, Form, Table, Radio, Breadcrumb, Alert, Icon, Popover, Badge } from 'antd';
+import { Row, Col, Input, Button, Form, Table, Radio, Breadcrumb, Alert, Icon, Popover, Badge, Pagination } from 'antd';
 import OrderStatistics from '../order/components/orderStatistics';
 import style from './style.less';
+import { OrderListState, OrderParams } from '../exports'
 
-import { fetchCloseOrderDetail } from '../../services/order';
-
-const orderWord = {
-  total: 8888,          //总订单
-  undone: 25,           //未完成 ＊
-  done: 100,            //已完成 ＊
-  unDistribution: 10,   //待分配 ＊
-  distribution: 50,     //分配中 ＊
-  exception: -50,       //异常   ＊
-  canceled: -100,       //已取消 ＊
-  completeRate: 0.88,   //成功率
-
-  //使用初始化
-  description(rawValue) {
-    switch (rawValue) {
-      case this.total:
-        return 'total';
-      case this.undone:
-        return 'undone';
-      case this.done:
-        return 'done';
-      case this.unDistribution:
-        return 'unDistribution';
-      case this.distribution:
-        return 'distribution';
-      case this.exception:
-        return 'exception';
-      case this.canceled:
-        return 'canceled';
-      case this.completeRate:
-        return 'completeRate';
-      default:
-        return 'other';
-    }
-  },
-};
-
+import HeaderTitle from './detailHeader';
 
 //请求的每页数据条数
-const requestPagerSize = 12;
-const requestPageNumber = 1;
+const { rgReg, requestPagerSize, requestPageNumber } = OrderParams;
 
 class Seller extends React.Component {
 
@@ -52,17 +16,22 @@ class Seller extends React.Component {
     super();
     const { operationOrder } = props;
 
-    //sellerId props.location.query
-    const { sellerId } = props.location.query;
+    //接收传递参数
+    const { sellerId, date, sellerName, cityCode } = props.location.query;
 
     //订单状态
-    const { totalOrderStatistics, areaOrderList } = operationOrder;
+    const { sellerOrderStatistics, areaOrderList, areaMeta } = operationOrder;
 
     //初始化状态
     this.state = {
-      totalOrderStatistics,
+      sellerOrderStatistics,
       areaOrderList,
+      areaMeta,
       sellerId,
+      date,
+      sellerName,
+      current: requestPageNumber,             //当前页码
+      cityCode,
     };
 
     //私有变量属性－－－不要把方法直接挂在this上，固定不变的属性放在 private中
@@ -72,20 +41,58 @@ class Seller extends React.Component {
   }
 
   componentDidMount = () => {
-    const AccountSet = JSON.parse(window.localStorage.getItem('accountInfo') || '{}');
-    const UserSet = JSON.parse(window.localStorage.getItem('userInfo') || '{}');
+    const { fetchSellerMethod } = this;
+    fetchSellerMethod();
+  };
+
+  componentWillReceiveProps = (nextProps) => {
+    const { operationOrder, current } = nextProps;
+    const { sellerOrderStatistics, areaOrderList, areaMeta } = operationOrder;
+    this.setState({
+      sellerOrderStatistics,
+      areaOrderList,
+      areaMeta,
+      current,
+    })
+  };
+
+  //update 分页请求
+  onPageChange = (page) => {
+    this.setState({ current: page });
+    const AccountSet = JSON.parse(window.getStorageItem('accountInfo') || '{}');
     const { vendor_id } = AccountSet;
-    const { city_code } = UserSet;
-    const date = window.localStorage.getItem('date') || ' ';
     const { dispatch } = this.props;
-    const { sellerId } = this.state;
+    const { sellerId, date, cityCode } = this.state;
+    //服务商订单列表
+    dispatch({
+      type: 'fetchAreaOrderList',
+      payload: {
+        sellerId,                    //商户ID
+        vendorId: vendor_id,
+        cityCode,
+        shippingDate: date,
+        page,                        //页码
+        limit: requestPagerSize,     //分页
+        sort: '{created_at: -1}',    //排序按照创建时间排序：－1代表倒叙排列；默认按照 最早创建的显示在最前面。
+      },
+    })
+  };
+
+  //请求
+  fetchSellerMethod = () => {
+    const AccountSet = JSON.parse(window.getStorageItem('accountInfo') || '{}');
+    const { vendor_id } = AccountSet;
+    const { dispatch } = this.props;
+    const { sellerId, date, cityCode } = this.state;
     //请求订单数据状态
     dispatch({
-      type: 'fetchTotalOrderStatistics',
+      type: 'fetchSellerOrderStatistics',
       payload: {
         vendorId: vendor_id,
-        cityCode: city_code ? city_code : 110000,
-        shippingDate: date },
+        sellerId,
+        cityCode,
+        shippingDate: date,
+      },
     });
 
     //服务商订单列表
@@ -94,29 +101,20 @@ class Seller extends React.Component {
       payload: {
         sellerId,                    //商户ID
         vendorId: vendor_id,
-        cityCode: city_code ? city_code : 110000,
+        cityCode,
         shippingDate: date,
         page: requestPageNumber,     //页码
         limit: requestPagerSize,     //分页
-        sort:  '{created_at: -1}',   //排序按照创建时间排序：－1代表倒叙排列；默认按照 最早创建的显示在最前面。
+        sort: '{created_at: -1}',   //排序按照创建时间排序：－1代表倒叙排列；默认按照 最早创建的显示在最前面。
       },
-    })
-  };
-
-  componentWillReceiveProps = (nextProps) => {
-    const { operationOrder } = nextProps;
-    const { totalOrderStatistics, areaOrderList } = operationOrder;
-    this.setState({
-      totalOrderStatistics,
-      areaOrderList,
     })
   };
 
   //渲染商家订单状态统计
   renderStateDashboardComponent = () => {
-    const { totalOrderStatistics } = this.state;
+    const { sellerOrderStatistics } = this.state;
     const props = {
-      totalOrderStatistics,     //订单状态
+      orderStatistics: sellerOrderStatistics,     //订单状态
     };
     return (
       <OrderStatistics {...props} />
@@ -125,7 +123,8 @@ class Seller extends React.Component {
 
   //服务商列表（供应商列表）
   renderAreaOrderStateComponent= () => {
-    const { areaOrderList } = this.state;
+    const { onPageChange } = this;
+    const { areaOrderList, areaMeta, current } = this.state;
     const columns = [{
       title: '服务区域',
       dataIndex: 'area_name',
@@ -137,47 +136,84 @@ class Seller extends React.Component {
     }, {
       title: <span><Badge className={style.minCircle_2} />已确认</span>,
       dataIndex: 'states',
-      key: 'unDistribution',
-      render: (states, row, index) => { return states[orderWord.unDistribution] || 0 },
+      key: 'confirmed',
+      render: (states, row, index) => { return states[OrderListState.confirmed] || 0 },
+    }, {
+      title: <span><Badge className={style.minCircle_3} />异常</span>,
+      dataIndex: 'states',
+      key: 'exception',
+      render: (states, row, index) => { return states[OrderListState.exception] || 0 },
     }, {
       title: <span><Badge className={style.minCircle_4} />配送中</span>,
       dataIndex: 'states',
       key: 'distribution',
-      render: (states, row, index) => { return states[orderWord.distribution] || 0 },
+      render: (states, row, index) => { return states[OrderListState.distribution] || 0 },
     }, {
       title: <span><Badge className={style.minCircle_5} />未完成</span>,
       dataIndex: 'states',
       key: 'undone',
-      render: (states, row, index) => { return states[orderWord.undone] || 0 },
+      render: (states, row, index) => {
+        //已确认订单数
+        const confirmedNumber = states[OrderListState.confirmed] ? states[OrderListState.confirmed] : 0;
+        //配送中订单数
+        const distributionNumber = states[OrderListState.distribution] ? states[OrderListState.distribution] : 0;
+        //异常订单数
+        const exceptionNumber = states[OrderListState.exception] ? states[OrderListState.exception] : 0;
+        //未完成订单数
+        return (confirmedNumber + distributionNumber + exceptionNumber);
+      },
     }, {
       title: <span><Badge className={style.minCircle_6} />已送达</span>,
       dataIndex: 'states',
       key: 'done',
-      render: (states, row, index) => { return states[orderWord.done] || 0 },
+      render: (states, row, index) => { return states[OrderListState.done] || 0 },
     }, {
       title: <span><Badge className={style.minCircle_7} />已取消</span>,
       dataIndex: 'states',
       key: 'canceled',
-      render: (states, row, index) => { return states[orderWord.canceled] || '0' },
+      render: (states, row, index) => { return states[OrderListState.canceled] || '0' },
     }, {
       title: '完成率',
       dataIndex: 'states',
       key: 'completeRate',
       render: (text, record, index) => {
-        //TODO: percent rate
-        const totalNum = record.order_count;
-        let completeRate = ((text[orderWord.done] / totalNum).toFixed(3))*100;
-        /*completeRate = completeRate && (completeRate.slice(2, 4) + '.' + completeRate.slice(4, 6));*/
-        return (completeRate && (completeRate + '%')) || (0 + '%');
+        //总数
+        const totalNum = record.order_count ? record.order_count : 0;
+        //已完成
+        const doneNum = text[OrderListState.done] ? text[OrderListState.done] : 0;
+        //完成率：＊＊总数为0
+        const rate = totalNum !== 0 ? doneNum / totalNum : 0;
+        let completeRate = rate * 100;
+        //取两位小数
+        completeRate = `${completeRate.toFixed(2).toString()}%`;
+        return completeRate && completeRate;
       },
     }];
 
+    //总条数
+    const totalNum = areaMeta && areaMeta.result_count > 0 ? areaMeta.result_count : '0';
+    //分页属性
+    const pagination = {
+      total: totalNum,
+      current,
+      pageSize: 1000,
+      onChange: onPageChange,
+    };
+    //显示or隐藏总条数
+    const paginationShow = totalNum > 0 ? <Pagination className="ant-table-pagination" {...pagination} showTotal={total1 => `共 ${totalNum} 条`} /> : '';
+    //标头
     return (
-      <Table dataSource={areaOrderList} columns={columns} />
+      <div>
+        <Table dataSource={areaOrderList} columns={columns} pagination={false} />
+        {
+          paginationShow
+        }
+      </div>
     );
   };
 
   render() {
+    const { sellerName } = this.state;
     const {
       renderStateDashboardComponent,
       renderAreaOrderStateComponent,
@@ -186,6 +222,7 @@ class Seller extends React.Component {
       <div className={`${style.component} con-body main-list`}>
         <Row>
           <Col>
+            <HeaderTitle title={`${sellerName}商家列表 `} />
             {/* 渲染状态数据面板 */}
             <div className="bd-content">{renderStateDashboardComponent()}</div>
           </Col>
@@ -204,4 +241,3 @@ function mapStateToProps({ operationOrder }) {
 }
 
 module.exports = connect(mapStateToProps)(Seller);
-

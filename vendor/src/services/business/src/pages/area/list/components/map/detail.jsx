@@ -58,7 +58,7 @@ class MapDetailComponent extends React.Component {
     //如果没有数据则直接返回
     if (!region_info) {
       //修复区域数据为空时，地图定位问题（百度地图bug）
-      if (areaDetail.length) {
+      if (areaDetail !== undefined && areaDetail.id) {
         mapObject.centerAndZoom(cityName, 14);
       }
       return;

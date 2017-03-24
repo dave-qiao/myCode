@@ -1,4 +1,5 @@
 import dva, { connect } from 'dva';
+import { notification } from 'antd';
 import 'antd/dist/antd.min.css';
 import './index.html';
 
@@ -27,6 +28,81 @@ window.setStorageItem = (key, value) => {
 window.getStorageItem = (key) => {
   const namespaceItem = window.getStorageWithNameSpace();
   return namespaceItem[key];
+}
+
+//加载状态
+const LoadingState = {
+  none: 0,      //无状态
+  loading: 1,   //加载中
+  finish: 2,    //已完成
+  error: 3,     //出错
+}
+
+//通知中心
+let notificationQueue = [];
+const loadingNotification = () => {
+  let loadingCount = 0; //加载中的请求数量
+  let finishCount = 0;  //已完成的请求数量
+  let errorCount = 0;   //错误的请求数量
+  notificationQueue.forEach((loadingTask) => {
+    switch (loadingTask.state) {
+      case LoadingState.loading: loadingCount += 1; break;
+      case LoadingState.error: errorCount += 1; break;
+      case LoadingState.finish: finishCount += 1; break;
+      default: break;
+    }
+  })
+
+  //显示信息
+  notification.close('aoaoAppsVenderLoading');
+  notification.open({
+    key: 'aoaoAppsVenderLoading',
+    message: '数据加载中...',
+    description: `加载中 ${loadingCount} / 已完成 ${finishCount} / 错误 ${errorCount}`,
+    duration: null,
+  });
+
+  if (notificationQueue.length === finishCount) {
+    notification.close('aoaoAppsVenderLoading');
+    // notification.success({ message: '数据加载完成', duration: 4.0 });
+    notificationQueue = [];
+  } else if (notificationQueue.length !== 0 && loadingCount === 0) {
+    notification.error({ message: '数据加载失败，请重新加载尝试', duration: null });
+    notificationQueue = [];
+  }
+};
+
+//开始加载
+window.startLoading = (key) => {
+  //记录加载的请求
+  notificationQueue.push({ key, state: LoadingState.loading });
+  loadingNotification()
+};
+
+//结束加载
+window.finishLoading = (key) => {
+  notificationQueue.map((loadingTask) => {
+    const task = loadingTask
+    if (task.key === key) {
+      task.state = LoadingState.finish;
+    }
+    return loadingTask;
+  })
+
+  loadingNotification()
+}
+
+//加载失败
+window.errorLoading = (key) => {
+  notificationQueue.map((loadingTask) => {
+    const task = loadingTask
+    if (task.key === key) {
+      task.state = LoadingState.error;
+    }
+    return loadingTask;
+  })
+
+  loadingNotification()
 }
 
 //模块

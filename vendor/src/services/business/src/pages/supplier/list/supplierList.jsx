@@ -137,9 +137,12 @@ export default class SupList extends Component {
 
   // 保存供应商Id
   saveId = (record) => {
+    const { dispatch } = this.props;
     const biz_info_id = record.id;
     const supply_vendor_id = record.supply_vendor_id;
-    this.props.saveId(biz_info_id, supply_vendor_id);
+    const city_code = record.service_city_code[0];
+    this.props.saveId(biz_info_id, supply_vendor_id, city_code);
+    console.log(city_code,'saveId')
   };
 
   render() {

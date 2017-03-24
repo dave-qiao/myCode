@@ -9,4 +9,3 @@ const [
   require('../mockDatas/couriers.js'),
   require('../mockDatas/partners.js'),
 ];
-console.log(areas, employees, couriers, partners);

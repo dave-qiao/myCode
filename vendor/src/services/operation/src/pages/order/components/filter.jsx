@@ -3,10 +3,12 @@ import React, { Component, PropTypes } from 'react';
 import { hashHistory, Link } from 'dva/router';
 import { Form, Button, Select } from 'antd';
 import style from './style.less';
+import { OrderParams } from './../../exports';
 
 const moment = require('moment');
 
-const rgReg = /\-/g;
+const { rgReg, requestPagerSize, requestPageNumber } = OrderParams;
+
 //初始化变量   {/*onChange={onChangeCity}defaultValue={cityCode}*/} {/*{...state}*/}
 const [FormItem, Option] = [Form.Item, Select.Option];
 
@@ -22,9 +24,9 @@ class FilterComponent extends Component {
       date: props.date,
     };
     this.private = {
-      onChangeCity: props.onChangeCity, //选择城市的事件回调
-      onChangeDate: props.onChangeDate, //选择日期的时间回调
-      onHandleSearch: props.onHandleSearch, //处理搜索回调
+      onChangeCity: props.onChangeCity,      //选择城市的事件回调
+      onChangeDate: props.onChangeDate,      //选择日期的时间回调
+      onHandleSearch: props.onHandleSearch,  //处理搜索回调
     };
   }
 
@@ -52,14 +54,12 @@ class FilterComponent extends Component {
 
   //选择日期
   onChangeDate = (date) => {
-    this.setState({ date });
     this.private.onChangeDate(date);
   };
 
   //搜索
-  onHandleSearch = (date, cityCode) => {
-    this.setState({ date, cityCode });
-    this.private.onHandleSearch(date, cityCode);
+  onHandleSearch = () => {
+    this.private.onHandleSearch();
   };
 
   //城市
@@ -105,13 +105,12 @@ class FilterComponent extends Component {
 
   //日期
   renderDateComponent = () => {
-    //今天
-    const today = moment().format().replace(rgReg, '').substring(0, 8);
     //昨天
     const yesterday = moment().subtract(1, 'days').format().replace(rgReg, '').substring(0, 8);
+    //今天
+    const today = moment().format().replace(rgReg, '').substring(0, 8);
     //明天
     const tomorrow = moment().add(1, 'days').format().replace(rgReg, '').substring(0, 8);
-
     const dateSource = [
       { title: '昨天', date: yesterday },
       { title: '今天', date: today },
@@ -122,10 +121,10 @@ class FilterComponent extends Component {
       <Select
         showSearch
         style={{ width: 150 }}
-        placeholder="请选择时间"
+        placeholder="请选择日期"
         optionFilterProp="children"
         onChange={onChangeDate}
-        defaultValue="今天"
+        defaultValue={'今天'}
       >
         {
           //渲染选项
@@ -142,15 +141,11 @@ class FilterComponent extends Component {
     const { renderCityComponent, renderDateComponent, onHandleSearch } = this;
     return (
       <Form inline onSubmit={this.handleSubmit}>
-        <FormItem
-          label="城市"
-        >
+        <FormItem label="城市">
           {/*城市列表   defaultValue={cityCode}  */}
           {renderCityComponent()}
         </FormItem>
-        <FormItem
-          label="日期"
-        >
+        <FormItem label="日期">
           {/*日期选择器 */}
           {renderDateComponent()}
         </FormItem>

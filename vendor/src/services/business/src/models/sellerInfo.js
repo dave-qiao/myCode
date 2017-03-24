@@ -25,7 +25,15 @@ import {
   editKnightRuleS,
   deleteKnightRule,
 } from '../../../aoao-core-api-service/src/retail';
-import { stateTransform, numberDateToStr, dateFormatNew, sqlit, utcToDate, dateFormat } from '../../../../utils/newUtils';
+import { fetchCityList } from '../../../aoao-core-api-service/src/public';
+import {
+  stateTransform,
+  numberDateToStr,
+  dateFormatNew,
+  sqlit,
+  utcToDate,
+  dateFormat
+} from '../../../../utils/newUtils';
 import { getCityNameByCode } from '../../../../utils/authHelper';
 
 //添加后跳转
@@ -168,6 +176,9 @@ module.exports = {
     serviceMessage: {},
     // 更新开关（添加、编辑、删出后需要重新获取最新数据）
     upData: false,
+    // 可服务的城市列表
+    serviceCityList: [],
+    pageFlag: false,
   },
   subscriptions: [
     function ({ dispatch, history }) {
@@ -240,6 +251,12 @@ module.exports = {
             payload: { seller_id, city_code },
           });
 
+          // 获取可服务的城市列表
+          dispatch({
+            type: 'manageGetServiceCityListE',
+            payload: { vendor_id }
+          });
+
         }
 
         //清除列表数据
@@ -306,6 +323,12 @@ module.exports = {
             type: 'getSellerShopsE',
             payload: { seller_id, city_code },
           });
+
+          // 获取可服务的城市列表
+          dispatch({
+            type: 'manageGetServiceCityListE',
+            payload: { vendor_id }
+          })
 
         }
 
@@ -523,6 +546,14 @@ module.exports = {
       }
     },
 
+    // 获取服务商服务城市
+    *manageGetServiceCityListE(params){
+      const serviceCityList = yield call(fetchCityList, params.payload.vendor_id);
+      yield put({
+        type: 'manageGetServiceCityListR',
+        payload: serviceCityList,
+      })
+    }
 
   },
 
@@ -744,6 +775,25 @@ module.exports = {
         teamList,
       }
     },
+
+    // 服务商可服务城市
+    manageGetServiceCityListR(state, action) {
+      const { serviceCityList } =state;
+      Object.assign(serviceCityList, action.payload);
+      return {
+        ...state,
+        serviceCityList,
+      }
+    },
+
+    // 分页的开关
+    pageFlagChange(state, action) {
+      const { pageFlag } = state;
+      return {
+        ...state,
+        pageFlag: action.payload.pageFlag,
+      }
+    }
 
   },
 }

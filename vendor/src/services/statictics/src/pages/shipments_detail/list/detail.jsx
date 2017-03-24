@@ -2,6 +2,7 @@ import React, { Component, PropTypes } from 'react';
 import { Form, Table, Row, Col, Popconfirm, Button } from 'antd';
 import { connect } from 'dva';
 import { Link } from 'dva/router';
+import { isEmptyObject } from '../../../../../../utils/newUtils';
 const { stateTransform, numberDateToStr, utcToDate } = window.tempAppTool;
 
 const [FormItem] = [Form.Item];
@@ -33,7 +34,7 @@ const View = ({ statictics_shipments_detail, dispatch }) => {
   const itemLayout = { '4_18': { labelCol: { span: 4 }, wrapperCol: { span: 18 } } };
   const columns = [
     {
-      title: '运单跟踪记录',
+      title: '运单状态',
       dataIndex: 'event_state',
       key: 'event_state',
       render: (text, record) => {
@@ -88,11 +89,7 @@ const View = ({ statictics_shipments_detail, dispatch }) => {
   if (shipment_detail.shop) {
     shop_name = shipment_detail.shop.name
   }
-  let data = shipment_log.data;
-
-  if (data) {
-    data = data.reverse();
-  }
+  const data = shipment_log.data;
 
   return (
     <div className="con-body">
@@ -121,6 +118,9 @@ const View = ({ statictics_shipments_detail, dispatch }) => {
               </FormItem>
               <FormItem label="发货地址" {...itemLayout['4_18']}>
                 {shipment_detail.consignor_address} {shipment_detail.consignor_address_detail}
+              </FormItem>
+              <FormItem label="代付商家" {...itemLayout['4_18']}>
+                { shipment_detail.extra_services && shipment_detail.extra_services.payment && !isEmptyObject(shipment_detail.extra_services.payment) ? (Number(shipment_detail.extra_services.payment.amount) / 100).toFixed(2) : '0.00' } 元
               </FormItem>
               <FormItem label="配送距离" {...itemLayout['4_18']}>
                 {shipment_detail.local_calc_distance}km
@@ -158,6 +158,9 @@ const View = ({ statictics_shipments_detail, dispatch }) => {
               <FormItem label="顾客地址" {...itemLayout['4_18']}>
                 {shipment_detail.consignee_address} {shipment_detail.consignee_address_detail}
               </FormItem>
+              <FormItem label="代收顾客" {...itemLayout['4_18']}>
+                { shipment_detail.extra_services && shipment_detail.extra_services.cod && !isEmptyObject(shipment_detail.extra_services.cod) ? (Number(shipment_detail.extra_services.cod.amount) / 100).toFixed(2) : '0.00' } 元
+              </FormItem>
               <FormItem label="物流商" {...itemLayout['4_18']}>
                 {vendor_name}
               </FormItem>
@@ -188,6 +191,7 @@ const View = ({ statictics_shipments_detail, dispatch }) => {
             <Col sm={22}>
               <Col sm={6}>运单号:{shipment_detail.id}</Col>
               <Col sm={5}>配送区域：{shipment_area.name} </Col>
+              <Col sm={5}>供应商：{ shipment_detail.supply_vendor_info && shipment_detail.supply_vendor_info.name ? shipment_detail.supply_vendor_info.name : '' } </Col>
               <Col sm={5}>骑士：{courier.name}</Col>
               <Col sm={6}>联系电话：{courier.mobile}</Col>
             </Col>

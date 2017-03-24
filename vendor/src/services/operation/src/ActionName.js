@@ -14,9 +14,12 @@ module.exports = {
     fetchCloseOrderList: 'fetchCloseOrderList',             //获取异常列表－异常订单列表
     fetchCloseOrderDetail: 'fetchCloseOrderDetail',         //获取异常列表－异常订单详情
     fetchCloseOrderLog: 'fetchCloseOrderLog',               //获取异常列表－异常订单日志
+    fetchCloseOrderRedivides: 'fetchCloseOrderRedivides',   //获取异常列表－异常订单详情页操作：重新分单
+    fetchCloseOrder: 'fetchCloseOrder',                     //获取异常列表－异常订单详情页操作：关闭订单
   },
 
   SellerAction: {
-    fetchAreaOrderList: 'fetchAreaOrderList',               //获取区域订单
+    fetchSellerOrderStatistics: 'fetchSellerOrderStatistics', //获取商家订单状态
+    fetchAreaOrderList: 'fetchAreaOrderList',                 //获取区域订单
   },
 };

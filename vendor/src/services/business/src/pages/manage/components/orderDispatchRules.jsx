@@ -25,35 +25,111 @@ import {
 import style from '../style/manage.less';
 import OrderRulesList from './retail/orderRulesList';
 const [FormItem, Option, TreeNode] = [Form.Item, Select.Option, TreeSelect.TreeNode];
+const data = {
+  area: [],
+  number: 0,
+}
 
 class OrderSingle extends Component {
-  constructor(props) {
+  constructor() {
     super();
     this.state = {
-      visible: false,
-      columns: [{
-        title: '服务区域',
+      visibles: false,
+      rightTitle: '',
+      areaRecord: [],
+      filterDropdownVisible: false,
+      areaValue: [],
+      searchText: '',
+      treeList: [],
+      serviceCityList: [],
+      pagination: {
+        total: 0,
+        size: 'small',
+        showTotal: (total) => {
+          return `总共 ${total} 条`;
+        },
+        onChange(current) {
+
+        },
+      },
+      pageFlagChange: true,
+      columns:[{
+        title: `服务区域 (${data.area.length}、${data.number})`,
         dataIndex: 'name',
-        width:'50%',
-        render: (text, record) => {
-          return (
-            <span>{ record.name ? record.name : '' }</span>
-          )
-        }
+        key: 'name',
+        width: '50%',
+        /*filterDropdown: (
+         <div className={style.custom_filter_dropdown}>
+         <Input
+         placeholder="Search name"
+         value={this.state.searchText}
+         onChange={this.onInputChange}
+         onPressEnter={this.onSearch.bind()}
+         />
+         <Button type="primary" onClick={this.onSearch.bind()}>查询</Button>
+         </div>
+         ),
+         filterDropdownVisible: this.state.filterDropdownVisible,*/
+        /*onFilterDropdownVisibleChange: visible => this.setState({ filterDropdownVisible: visible }),*/
       }, {
         title: '分单规则',
         dataIndex: 'is_set_order_delivery_rule',
+        key: 'is_set_order_delivery_rule',
         render: (text, record) => {
           return (
-            <span>{text == true ? '已设置' : '未设置'}</span>
+            <span>{record.is_set_order_delivery_rule && record.is_set_order_delivery_rule == true ? '已设置' : '未设置'}</span>
           )
-        }
-      },],
-      rightTitle: '',
-      areaRecord: [],
+        },
+        filters: [
+          { text: '未设置', value: false },
+          { text: '已设置', value: true },
+        ],
+        filterMultiple: false,
+        onFilter: (value, record, current) => {
+          /*this.state.pagination = {
+            total: 0,
+            showTotal(total) {
+              /!*dispatch({
+               type: 'pageFlagChange',
+               payload: pageFalg,
+               });*!/
+              console.log('dddd')
+              return `总共 ${total} 条`;
+            },
+            onChange(current) {
+              console.log('Current: ', current);
+            }
+          };*/
+          this.pageChanges();
+          return `${record.is_set_order_delivery_rule}` === value;
+        },
+      },]
     }
   }
 
+  // 接受 model 层 props
+  componentWillReceiveProps = (nextProps) => {
+    const { areaList, serviceCityList, pageFlag } = nextProps.retailSellerInfo;
+    const areaValue = areaList;
+    if (areaValue.data != data.area) {
+      this.setState({
+        areaValue: areaValue.data ? areaValue.data : [],
+        pagination: {
+          total: areaValue.data.length,
+        }
+      })
+    }
+    data.area = areaValue.data;
+    //获取区域列表
+    let treeList = this.state.areaRecord.sub_areas ? this.state.areaRecord.sub_areas : [];
+    treeList.push({ id: this.state.areaRecord.id, name: this.state.areaRecord.name });
+    this.setState({
+      treeList: treeList,
+      serviceCityList: serviceCityList,
+    });
+  };
+
+  // 展示弹出框
   showModal = ()=> {
     const { dispatch } = this.props;
     const state = 100; //区域状态  100开启 -100禁用
@@ -88,14 +164,15 @@ class OrderSingle extends Component {
         payload: { state, relate_type, city_code, vendor_id, supply_vendor_id, parent_area_id },
       });
       this.setState({
-        visible: true,
+        visibles: true,
       });
     } else {
       message.error('请选择左侧的服务区域')
     }
 
-  }
+  };
 
+  // 弹出框确认
   handleOk = (e, value)=> {
     const self = this;
     const { form, dispatch, retailSellerInfo } = this.props;
@@ -135,7 +212,7 @@ class OrderSingle extends Component {
           payload: { values },
         })
         self.setState({
-          visible: false,
+          visibles: false,
         });
         resetFields();
       }
@@ -143,15 +220,17 @@ class OrderSingle extends Component {
     });
   };
 
+  // 弹框取消
   handleCancel = (e)=> {
     const { form } = this.props;
     const { resetFields } = form;
     resetFields();
     this.setState({
-      visible: false,
+      visibles: false,
     });
   };
 
+  // 根据左侧的区域获取右侧的订单规则详情的代码
   onRowClick = (record, index) => {
     const { dispatch } = this.props;
     const area_id = record.id;
@@ -180,6 +259,7 @@ class OrderSingle extends Component {
     });
   };
 
+  // tabs 切换达到路由切换效果 TODO
   typeChange = (name) => {
     switch (name) {
       case  '订单分单规则':
@@ -211,9 +291,9 @@ class OrderSingle extends Component {
     const seller_id = sessionStorage.getItem('sellerId');
     // 通知model 层 通过区域id 获取此区域的分单规则详情信息
     /*dispatch({
-      type: 'getOrderRuleDetailE',
-      payload: { area_id, vendor_id, state, contract_id, seller_id, page, limit },
-    });*/
+     type: 'getOrderRuleDetailE',
+     payload: { area_id, vendor_id, state, contract_id, seller_id, page, limit },
+     });*/
 
   };
 
@@ -237,6 +317,114 @@ class OrderSingle extends Component {
     })
   };
 
+  // 订单规则的筛选 TODO
+  filterChange = (pagination, filters, sorter) => {
+
+  };
+
+  // 区域筛选
+  onInputChange = (e) => {
+    this.setState({ searchText: e.target.value });
+  };
+
+  onSearch = () => {
+    const { searchText, areaValue } = this.state;
+    const reg = new RegExp(searchText, 'gi');
+    this.setState({
+      filterDropdownVisible: false,
+      areaValue: data.area.map((record) => {
+        const match = record.name.match(reg);
+        if (!match) {
+          return null;
+        }
+        return {
+          ...record,
+          name: (
+            <span>
+              {record.name.split(reg).map((text, i) => (
+                i > 0 ? [<span className={style.highlight}>{match[0]}</span>, text] : text
+              ))}
+            </span>
+          ),
+        };
+      }).filter(record => !!record),
+    });
+  };
+
+  // 区域关键字搜索
+  areaSearch = (value) => {
+    let searchIndex = 0;
+    if (value === '0' || value === '' || value === undefined) {       //枚举 0:全部区域
+      this.setState({
+        areaValue: data.area,
+        pagination: {
+          total: data.area.length,
+          current: 1,
+        }
+      })
+    } else {
+      data.area.forEach(function (item, index) {
+        if (item.id == value) {
+          searchIndex = index;
+          return;
+        }
+      });
+
+      let areaChangeValue = data.area[searchIndex];
+      this.setState({
+        areaValue: [areaChangeValue],
+        pagination: {
+          total: 1,
+          current: 1,
+        }
+      })
+    }
+  };
+
+  // 城市筛选区域
+  cityChange = (value) => {
+    const { dispatch } = this.props;
+    const limit = 1000;
+    const city_code = value;
+    const _accountInfo = window.getStorageItem('accountInfo') || '{}';
+    const { vendor_id } = JSON.parse(_accountInfo);
+    const contract_id = sessionStorage.getItem('contractId');
+    const state = 100;//区域状态 100启用 -100 禁用
+    const relate_type = 10; // 区域类型 10 直营 20 加盟
+    const is_filter_sub_area = true; //是否过滤子区
+    const is_set_order_delivery_rule = true;  //是否返回设置订单分单规则状态
+    const is_set_courier_delivery_rule = true; //是否返回设置骑士分单规则状态
+    // 区域列表
+    dispatch({
+      type: 'getAreaE',
+      payload: {
+        vendor_id,
+        city_code,
+        state,
+        relate_type,
+        is_filter_sub_area,
+        is_set_order_delivery_rule,
+        contract_id,
+        limit
+      },
+    });
+    this.setState({
+      pagination: {
+        current: 1,
+      }
+    })
+  };
+
+  // 分页重置
+  pageChanges = () => {
+    /*const { dispatch } = this.props;
+    const pageFalg = !this.state.pageFlagChange;
+    dispatch({
+      type: 'pageFlagChange',
+      payload: pageFalg,
+    });*/
+  };
+
   render() {
     const _accountInfo = window.getStorageItem('accountInfo') || '{}';
     const userInfo = window.getStorageItem('userInfo') || '{}';
@@ -250,13 +438,7 @@ class OrderSingle extends Component {
 
     // 结构一层 将区域列表拿出来
     const areaValue = areaList;
-
-    // 服务商列表
-    /*serviceProvider.data.push({id:serviceMessage.id,name:serviceMessage.name})*/
-
-    //获取区域列表
-    let treeList = this.state.areaRecord.sub_areas ? this.state.areaRecord.sub_areas : [];
-    treeList.push({ id: this.state.areaRecord.id, name: this.state.areaRecord.name });
+    const treeList = this.state.treeList;
 
     const orderListProp = {
       orderRuleListDetail,
@@ -304,6 +486,59 @@ class OrderSingle extends Component {
       })
     }
 
+    // 表格数据
+    const columns = [{
+      title: <span>服务区域 <br/><span style={{color:'#58e2c2'}}>总计({data.area.length})</span></span>,
+      dataIndex: 'name',
+      key: 'name',
+      width: '50%',
+      /*filterDropdown: (
+       <div className={style.custom_filter_dropdown}>
+       <Input
+       placeholder="Search name"
+       value={this.state.searchText}
+       onChange={this.onInputChange}
+       onPressEnter={this.onSearch.bind()}
+       />
+       <Button type="primary" onClick={this.onSearch.bind()}>查询</Button>
+       </div>
+       ),
+       filterDropdownVisible: this.state.filterDropdownVisible,*/
+      /*onFilterDropdownVisibleChange: visible => this.setState({ filterDropdownVisible: visible }),*/
+    }, {
+      title: '分单规则',
+      dataIndex: 'is_set_order_delivery_rule',
+      key: 'is_set_order_delivery_rule',
+      render: (text, record) => {
+        return (
+          <span>{record.is_set_order_delivery_rule && record.is_set_order_delivery_rule == true ? '已设置' : '未设置'}</span>
+        )
+      },
+      filters: [
+        { text: '未设置', value: false },
+        { text: '已设置', value: true },
+      ],
+      filterMultiple: false,
+      onFilter: (value, record, current) => {
+        /*this.state.pagination = {
+         total: 0,
+         showTotal(total) {
+         /!*dispatch({
+         type: 'pageFlagChange',
+         payload: pageFalg,
+         });*!/
+         console.log('dddd')
+         return `总共 ${total} 条`;
+         },
+         onChange(current) {
+         console.log('Current: ', current);
+         }
+         };*/
+        this.pageChanges();
+        return `${record.is_set_order_delivery_rule}` === value;
+      },
+    },];
+
     return (
       <div className="con-body main-list">
         <div className={style.reset}>
@@ -336,8 +571,42 @@ class OrderSingle extends Component {
                 </Col>
               </div>
               <div className={`bd-content ${style.inLine}`}>
-                <Table columns={this.state.columns} dataSource={areaValue.data}
-                       onRowClick={this.onRowClick} pagination={false} scroll={{ x: 0, y: 600 }}/>
+                <Select showSearch
+                        style={{ width: '90%', marginBottom: 16 }}
+                        placeholder="请输入城市"
+                        optionFilterProp="children"
+                        notFoundContent="暂无数据"
+                        defaultValue=''
+                        onChange={this.cityChange}>
+                  <Option value="">全部</Option>
+                  {
+                    this.state.serviceCityList.map((item, index)=> {
+                      return (
+                        <Option value={item.city_code} key={`${item.city_code}${index}`}>{item.city_name}</Option>
+                      )
+                    })
+                  }
+                </Select>
+                <Select showSearch
+                        allowClear
+                        style={{ width: '90%', marginBottom: 16 }}
+                        placeholder="请输入搜索内容"
+                        optionFilterProp="children"
+                        notFoundContent="暂无数据"
+                        defaultValue={'0'}
+                        onChange={this.areaSearch}>
+                  <Option value={'0'}>全部</Option>
+                  {
+                    data.area.map(function (item, index) {
+                      return (
+                        <Option value={item.id} key={`search${item.id}`}>{item.name}</Option>
+                      )
+                    })
+                  }
+                </Select>
+                <Table columns={columns} dataSource={this.state.areaValue}
+                       onRowClick={this.onRowClick} pagination={false} scroll={{ x: 0, y: 600 }}
+                       onChange={this.filterChange}/>
               </div>
             </Col>
             <Col sm={19}>
@@ -349,7 +618,7 @@ class OrderSingle extends Component {
                   </Col>
                   <Col sm={12} style={{ textAlign: 'right' }}>
                     <Button type='primary' onClick={this.showModal}>添加分单规则</Button>
-                    <Modal title="添加分单规则" visible={this.state.visible}
+                    <Modal title="添加分单规则" visible={this.state.visibles}
                            onOk={this.handleOk} onCancel={this.handleCancel}
                            style={{ top: '35%' }}
                     >
@@ -362,73 +631,29 @@ class OrderSingle extends Component {
                           </Col>
                           <Col sm={24}>
                             <FormItem label="适用区域:" {...{ "labelCol": { "span": 8 }, "wrapperCol": { "span": 9 } }}>
-                              {treeList.length < 0 ?
-                                <TreeSelect
-                                  showSearch
-                                  style={{ width: '100%' }}
-                                  dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-                                  placeholder="请选择服务区域"
-                                  allowClear
-                                  treeDefaultExpandAll
-                                  treeCheckable
-                                  onSelect={this.onTreeChange}
-                                  {...getFieldProps("area_id", {
-                                    validate: [
-                                      {
-                                        rules: [{
-                                          required: true, message: '请选择服务区域', type: 'array',
-                                          validator: (rule, value, callback) => {
-                                            if (!value) {
-                                              callback('请选择服务区域');
-                                              return;
-                                            }
-                                            if (value.length == 0) {
-                                              callback('请选择服务区域');
-                                            }
-                                            callback();
-                                          },
-                                        },], trigger: 'onChange',
-                                      }
-                                    ]
-                                  })}
-                                >
-                                  <TreeNode value={this.state.areaRecord.id} title={this.state.areaRecord.name}
-                                            key={this.state.areaRecord.id}>
+                              <Select
+                                showSearch
+                                multiple
+                                style={{ width: '100%' }}
+                                placeholder="请选择服务区域"
+                                optionFilterProp="children"
+                                {...getFieldProps("area_id", {
+                                  validate: [
                                     {
-                                    {
-                                      /*treeList.map(function (item, index) {
-                                       return (
-                                       <TreeNode value={item.id} title={item.name} key={item.id}/>
-                                       )
-                                       })*/
+                                      rules: [{ type: 'array', required: true, message: '请选择服务区域' },],
+                                      trigger: 'onBlur',
                                     }
-                                    }
-                                  </TreeNode>
-                                </TreeSelect> :
-                                <Select
-                                  showSearch
-                                  multiple
-                                  style={{ width: '100%' }}
-                                  placeholder="请选择服务区域"
-                                  optionFilterProp="children"
-                                  {...getFieldProps("area_id", {
-                                    validate: [
-                                      {
-                                        rules: [{ type: 'array', required: true, message: '请选择服务区域' },],
-                                        trigger: 'onBlur',
-                                      }
-                                    ]
-                                  })}
-                                >
-                                  {
-                                    treeList.map(function (item, index) {
-                                      return (
-                                        <Option value={item.id} key={index}>{item.name}</Option>
-                                      )
-                                    })
-                                  }
-                                </Select>
-                              }
+                                  ]
+                                })}
+                              >
+                                {
+                                  this.state.treeList.map(function (item, index) {
+                                    return (
+                                      <Option value={item.id} key={`${index}${item.id}showModal`}>{item.name}</Option>
+                                    )
+                                  })
+                                }
+                              </Select>
                             </FormItem>
                           </Col>
                           <Col sm={24}>
@@ -455,7 +680,7 @@ class OrderSingle extends Component {
                                 {
                                   serviceProvider.data.map(function (item, index) {
                                     return (
-                                      <Option key={index} value={item.id}>{item.name}</Option>
+                                      <Option key={index.toString()} value={item.id}>{item.name}</Option>
                                     )
                                   })
                                 }

@@ -12,7 +12,11 @@ import {
   tms_courier_shipments_statistics,
 } from 'aoao-core-api-service/lib/tms.js';
 
+import { tms_push_order_find } from '../../../aoao-core-api-service/src/tms.js';
+
 import { area_find_500, area_find_one, courier_find_500, seller_find_one } from 'aoao-core-api-service/lib/business.js';
+
+import { fetchCityList } from '../../../aoao-core-api-service/src/public';
 
 import {
   areas_total_list
@@ -51,8 +55,11 @@ module.exports = {
     areas_total_list:{
       data:[],
     },
+    serviceCityList: [],    //请求城市列表
     default_area_id: '',    //默认的区域区域
     default_area_name: '',  //默认的区域名称
+    default_city_code: '',    //默认的城市区域
+    default_city_name: '',  //默认的城市名称
     vendor_id: '',          //服务商的ID
     couriers: {             //骑士的信息
       data: [],             //骑士列表的数据
@@ -64,6 +71,7 @@ module.exports = {
       loading: false,  //是否loading的开关 默认是关闭状态
       _meta: {},       // 服务器端返回的附带信息（包括总共多少条，后面还有没有数据的一个对象）
     },
+    pushOrderDetails: {},     //推单记录
     shipments_stats: {}, //调度模块的运单状态信息
     shipment_detail: {}, //调度模块的运单详情信息
     shipment_log: [],    //调度模块的运单日志信息
@@ -82,22 +90,41 @@ module.exports = {
         // 获取服务商的ID
         const { vendor_id } = AccountSet;
         // 获取城市的列表
-        const { city_code } = UserSet.account_info || {};
+        let { city_code, city_name } = UserSet || {};
         const { pathname } = location;
+        //拿缓存信息，如果有，则从缓存中取
+        const unmountKey = window.sessionStorage && JSON.parse(sessionStorage.getItem('COMPONENT_UNMOUNT'));
+        if (unmountKey) {
+          const cityInfo = window.sessionStorage && JSON.parse(sessionStorage.getItem('CITYINFO'))
+          if (cityInfo && cityInfo.city_code && cityInfo.city_name) {
+            city_code = cityInfo.city_code;
+            city_name = cityInfo.city_name;
+          }
+        }
+
         // 进入页面的初始化操作
         if (pathname === '/tms/control_panel') {
           dispatch({
             type: 'tms/page/init',
-            payload: { city_code, vendor_id }
+            payload: { city_code, default_city_code: city_code, city_name, vendor_id }
           });
         }
 
         // 如果跳转到详情页面
         if (location.pathname === '/tms/control_panel/detail') {
           let { query } = location;
+          //获取运单详情
           dispatch({
             type: 'tms/shipments/query/one',
             payload: query
+          });
+          const pushParam = {
+            shipment_id: query.id,
+            'sort': '{"created_at": -1}'
+          }
+          dispatch({
+            type: 'tms/shipments/push/order',
+            payload: pushParam
           });
         }
       });
@@ -109,13 +136,11 @@ module.exports = {
     // 调度页面初始化
     *['tms/page/init'](params) {
       // 获取参数
-      const { vendor_id, city_code } = params.payload;
-
+      let { vendor_id, city_code, city_name } = params.payload;
       // 请求区域
-      const result_areas = yield call(area_find_500, { state: 100, vendor_id, is_filter_sub_area: true });
+      const result_areas = yield call(area_find_500, { state: 100, vendor_id, city_code, is_filter_sub_area: true });
       //获取加盟区域
-      const result_total_areas = yield call(areas_total_list, vendor_id);
-      console.log(result_total_areas, 'result_total_areas');
+      const result_total_areas = yield call(areas_total_list, { vendor_id, city_code });
 
       // 返回区域的数据处理
       if (result_areas.err) {
@@ -128,17 +153,56 @@ module.exports = {
           //暂无可用区域，请先创建区域！
           message.error('暂无可用区域，请先创建区域！！');
         } else {
-          //取出第一个区域
-          const { city_code, id, name } = areas.data[0];
+          //取出第一个区域,如果有缓存从缓存里面取
+          let { id, name } = areas.data[0];
+          
+          //当区域名字和Id 有缓存时，取缓存信息做下次请求参数 2017-3-14 modified by liuli
+          const unmountKey = window.sessionStorage && JSON.parse(sessionStorage.getItem('COMPONENT_UNMOUNT'));
+          let tabState;
+          //unmountKey 为卸载组件key即跳转到其他页面的标记key，刷新页面不会卸载组件
+          if (unmountKey) {
+            //拿缓存
+            const areaInfo = window.sessionStorage && JSON.parse(sessionStorage.getItem('AREAINFO'))
+            const cityInfo = window.sessionStorage && JSON.parse(sessionStorage.getItem('CITYINFO'))
+            const tabValue = window.sessionStorage && JSON.parse(sessionStorage.getItem('TAB_VALUE'))
+            
+            if (areaInfo && areaInfo.area_id && areaInfo.area_name && cityInfo && cityInfo.city_code && cityInfo.city_name) {
+              id = areaInfo.area_id;
+              name = areaInfo.area_name;
+              city_code = cityInfo.city_code;
+              city_name = cityInfo.city_name;
+            }
+            tabState = tabValue || '1'
+            window.sessionStorage && sessionStorage.removeItem('COMPONENT_UNMOUNT');
+            
+          } else {
+            tabState = '1';
+            //重置
+            window.sessionStorage && sessionStorage.removeItem('SELECT_TAB_INDEX')
+            window.sessionStorage && sessionStorage.removeItem('AREAINFO')
+            window.sessionStorage && sessionStorage.removeItem('CITYINFO')
+            window.sessionStorage && sessionStorage.removeItem('TAB_VALUE')
+          }
+
+          // 请求城市列表
+          
+          //获取服务商服务城市
+          const serviceCityList = yield call(fetchCityList, vendor_id);
+          if (serviceCityList && serviceCityList.length > 0) {
+            yield put({
+              type: 'getServiceCityList',
+              payload: serviceCityList,
+            })
+          }
           // 设置默认区域的名字和城市为第一个区域的信息
           yield put({
             type: 'tms/page/init/success',
-            payload: { city_code, default_area_id: id, default_area_name: name, areas, vendor_id, }
+            payload: { city_code, default_city_code: city_code, default_city_name: city_name, default_area_id: id, default_area_name: name, areas, vendor_id, }
           });
           // 初始化运单
           yield put({
             type: 'tms/shipments/query',
-            payload: { city_code, area_id: id, vendor_id, state: '1', is_master: false }
+            payload: { city_code, area_id: id, vendor_id, state: tabState, is_master: false }
           });
           //初始化骑士
           yield put({
@@ -157,6 +221,37 @@ module.exports = {
 
     },
 
+    //根据城市获取区域列表
+    *['tms/shipments/areas/list'](params) {
+      yield put({
+        type: 'tms/shipments/all/clear/success',
+        payload: {}
+      })
+      // 获取参数
+      let { vendor_id, city_code } = params.payload;
+      // 请求区域
+      const result_areas = yield call(area_find_500, { state: 100, vendor_id, city_code, is_filter_sub_area: true });
+      //获取加盟区域
+      const result_total_areas = yield call(areas_total_list, { vendor_id, city_code });
+
+      // 返回区域的数据处理
+      if (result_areas.err) {
+        message.error('直营区域查询失败！');
+      } else {
+        const areas = result_areas.data;
+        //合并加盟区域数据
+        areas.data = areas.data.concat(result_total_areas);
+        if (areas.data.length === 0) {
+          //暂无可用区域，请先创建区域！
+          message.error('暂无可用区域，请先创建区域！！');
+        } 
+        yield put({
+          type: 'tms/shipments/areas/list/success',
+          payload: { areas }
+        })
+      }
+    },
+  
     // 调度运单列表查询
     *['tms/shipments/query'](params) {
       // 获取查询的参数
@@ -175,7 +270,6 @@ module.exports = {
       if (['3', '4', '5', '6'].indexOf(state) !== -1) {
         shipments.state = shipment_states_dict[state];
       }
-
       // 查询接口获取一定条件写的运单列表
       const result_shipments = yield call(tms_shipments_find, { ...shipments, shipping_date: dateFormat().join('') });
       // 返回运单数据的数据处理
@@ -188,6 +282,14 @@ module.exports = {
         });
       }
 
+    },
+
+    //清空运单数据，解决其他页面跳回调度中心页时的闪屏问题
+    *['tms/shipments/clear'](params) {
+      yield put({
+        type: 'shimpents/clear/success',
+        payload: {}
+      });
     },
 
     // 运单详情查询
@@ -226,6 +328,20 @@ module.exports = {
         });
       }
       ;
+    },
+
+    //推单记录
+    *['tms/shipments/push/order'](param) {
+      const pushOrderDetails = yield call(tms_push_order_find, param.payload);
+      if (pushOrderDetails.err) {
+        message.error('推单记录查询失败！');
+        return;
+      } 
+      const data = pushOrderDetails && pushOrderDetails.data;
+      yield put({
+        type: 'shipments/push/order/success', //运单的各种返回信息put代reducer中用来更新state表
+        payload: data
+      });
     },
 
     // 关闭运单
@@ -395,6 +511,13 @@ module.exports = {
         ...action.payload
       };
     },
+    //调度模块根据城市请求区域
+    ['tms/shipments/areas/list/success'](state, action) {
+      return {
+        ...state,
+        ...action.payload
+      };
+    },
     // 切换改派模态框的状态
     ['shipments/reassign/toggle'](state, action) {
       return {
@@ -408,6 +531,17 @@ module.exports = {
         ...state,
         shipments: action.payload
       };
+    },
+    // 清空调度中心数据
+    ['shimpents/clear/success'](state, action) {
+      return {
+        ...state,
+        shipments: {       
+          data: [],        //调度模块的运单列表数据
+          loading: false,  //是否loading的开关 默认是关闭状态
+          _meta: {},       // 服务器端返回的附带信息（包括总共多少条，后面还有没有数据的一个对象）
+        }
+      }
     },
     // 运单统计的数据
     ['tms/shipments/statistics/success'](state, action) {
@@ -451,5 +585,47 @@ module.exports = {
       });
       return { ..._result, shipment_detail };
     },
+    //推单记录查询
+    ['shipments/push/order/success'](state, action) {
+      return {
+        ...state,
+        pushOrderDetails: action.payload
+      }
+    },
+    // 服务商可服务城市
+    getServiceCityList(state, action){
+      const { serviceCityList } =state;
+      Object.assign(serviceCityList, action.payload);
+      return {
+        ...state,
+        serviceCityList,
+      }
+    },
+    //当没有区域时清空所有数据
+    ['tms/shipments/all/clear/success'](state, action) {
+      return {
+        ...state,
+        areas: { //调度模块的区域区域模块
+          data: [],//调度模块的区域区域
+        },
+        areas_total_list:{
+          data:[],
+        },
+        default_area_id: '',    //默认的区域区域
+        default_area_name: '',  //默认的区域名称
+        couriers: {             //骑士的信息
+          data: [],             //骑士列表的数据
+          loading: false,       //是否loading的开关 默认是关闭状态
+          _meta: {},            // 服务器端返回的附带信息（包括总共多少条，后面还有没有数据的一个对象）
+        },
+        shipments: {       //调度模块的运单信息
+          data: [],        //调度模块的运单列表数据
+          loading: false,  //是否loading的开关 默认是关闭状态
+          _meta: {},       // 服务器端返回的附带信息（包括总共多少条，后面还有没有数据的一个对象）
+        },
+        shipments_stats: {}, //调度模块的运单状态信息
+        visible: false,      //调度模块模态框的状态显示 默认是隐藏
+      }
+    }
   },
 }

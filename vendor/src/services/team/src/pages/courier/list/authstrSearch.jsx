@@ -20,6 +20,9 @@ const Authstr = Form.create()(({ form, searchs, onSearch, onShowItem, areas, dat
   return (
     <div className="bd-header">
       <Form horizontal className="ant-advanced-search-form" onSubmit={handleSubmit} key="authstr">
+        <Input {...getFieldProps("team_id", {
+          initialValue: '',
+        })} style={{display:'none'}}/>
         <div className={style.courierOverFlow}>
           <div className={`${style.navLeftBorder} ${style.courierRightTitle}`}>
             待审核骑士&nbsp;({readyListTables._meta.result_count ? readyListTables._meta.result_count : '0'})

@@ -38,12 +38,12 @@ class RetailOneLevel extends Component {
         }, {
           title: '总加盟商',
           dataIndex: 'vendor',
-          render: function(text, record) {
+          render: function (text, record) {
             return (
               <span>{record.vendor.name}</span>
             )
           }
-        },{
+        }, {
           title: '联系人',
           dataIndex: 'legal_name',
           render: function (text, record) {
@@ -104,11 +104,13 @@ class RetailOneLevel extends Component {
   componentWillReceiveProps = (nextProps) => {
     const { manageRetail } = nextProps;
     const { retailList } = manageRetail;
-    this.setState({
-      pagination: {
-        total:retailList._meta.result_count,
-      }
-    });
+    if (retailList) {
+      this.setState({
+        pagination: {
+          total: retailList._meta ? retailList._meta.result_count : 0,
+        }
+      });
+    }
   };
 
   //条件查询(城市)
@@ -131,7 +133,7 @@ class RetailOneLevel extends Component {
     const contractId = record.contract_id;
     const sellerName = record.name;
     const sellerMessage = record;
-    const vendorId= record.vendor_id;
+    const vendorId = record.vendor_id;
 
     sessionStorage.setItem('sellerId', sellerId);
     sessionStorage.setItem('contractId', contractId);
@@ -163,7 +165,7 @@ class RetailOneLevel extends Component {
             <Link to="/business/manage/retail">直营项目</Link>
           </Button>
           <Button type='primary'>
-            <Link to="/business/manage/affiliates">加盟项目</Link>
+            <Link to="/business/manage/affiliate">加盟项目</Link>
           </Button>
         </div>
         <div className="bd-content">
@@ -171,7 +173,11 @@ class RetailOneLevel extends Component {
             <Row type="flex">
               <Col sm={4}>
                 <FormItem label="城市" {...{ "labelCol": { "span": 6 }, "wrapperCol": { "span": '' } }}>
-                  <Select placeholder="请选择城市" style={{ width: "70%" }} defaultValue={getCityNameByCode(city_code)}
+                  <Select showSearch
+                          optionFilterProp="children"
+                          placeholder="请选择城市"
+                          style={{ width: "70%" }}
+                          defaultValue={getCityNameByCode(city_code)}
                           onChange={this.cityChange}>
                     {
                       serviceCityList.map(function (item, index) {

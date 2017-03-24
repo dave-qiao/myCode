@@ -65,7 +65,7 @@ class MainForm extends React.Component {
   render() {
     const { form } = this.props;
     const { areaList } = this.props.areaList;
-    const cityList = this.state.cityList||[];
+    const cityList = this.state.cityList || [];
     const areas = areaList ? areaList.data : [];
     const { getFieldProps } = form;
     const { handleCheck, handleSubmit } = this;
@@ -123,16 +123,20 @@ class MainForm extends React.Component {
             </Col>
             <Col sm={12}>
               <FormItem label="城市"  {...{ "labelCol": { "span": 4 }, "wrapperCol": { "span": 8 } }}>
-                <Select placeholder="请输入城市" {...getFieldProps("city_code", {
-                  validate: [
-                    { rules: [{ required: true, message: '请输入城市' },], trigger: 'onBlur', }
-                  ]
-                })}>
+                <Select
+                  showSearch
+                  optionFilterProp="children"
+                  placeholder="请输入城市"
+                  {...getFieldProps("city_code", {
+                    validate: [
+                      { rules: [{ required: true, message: '请输入城市' },], trigger: 'onBlur', }
+                    ]
+                  })}>
                   {
                     cityList.map(function (item, index) {
                       return (
 
-                          <Option value={item.city_code} key={item.city_code}>{item.city_name}</Option>
+                        <Option value={item.city_code} key={item.city_code}>{item.city_name}</Option>
                       )
                     })
                   }
@@ -441,10 +445,9 @@ class MainForm extends React.Component {
 ;
 
 MainForm = Form.create()(MainForm);
-let View = ({ business_employee, dispatch, business_publics }) => {
+let View = ({ business_employee, dispatch }) => {
   const formProps = {
     dispatch,
-    areas: business_publics.areas,
     areaList: business_employee.areaList,
     cityList: business_employee.cityList,
   };
@@ -457,8 +460,8 @@ let View = ({ business_employee, dispatch, business_publics }) => {
   );
 };
 
-function mapStateToProps({ business_employee, business_publics }) {
-  return { business_employee, business_publics };
+function mapStateToProps({ business_employee }) {
+  return { business_employee };
 };
 
 module.exports = connect(mapStateToProps)(View);

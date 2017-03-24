@@ -121,7 +121,12 @@ class MainForm extends React.Component {
           <Col sm={12}>
             {/*更改  将区域数据改为团队数据*/}
               <FormItem label="所属团队" {...{"labelCol":{"span":4},"wrapperCol":{"span":12}}}>
-                  <Select placeholder="请选择骑士隶属团队" multiple {...getFieldProps("team_list",{
+                  <Select
+                    showSearch
+                    optionFilterProp="children"
+                    placeholder="请选择骑士隶属团队"
+                    multiple
+                    {...getFieldProps("team_list",{
                     validate: [
                       { rules: [{ required: true, message: '请选择骑士隶属团队',type:'array'}] }
                     ]
@@ -187,7 +192,7 @@ MainForm = Form.create()(MainForm);
 
 
 
-let View = ({business_courier, business_publics, dispatch}) => {
+let View = ({business_courier, dispatch}) => {
   const formProps = {
     didSubmit(values) {
       dispatch({
@@ -195,7 +200,6 @@ let View = ({business_courier, business_publics, dispatch}) => {
         payload: values
       });
     },
-    areas: business_publics.areas,
     teamList: business_courier.teamList,
     serviceCityList:business_courier.serviceCityList,
     dispatch:dispatch,
@@ -209,8 +213,8 @@ let View = ({business_courier, business_publics, dispatch}) => {
   );
 };
 
-function mapStateToProps({business_courier,business_publics}) {
-  return {business_courier,business_publics};
+function mapStateToProps({ business_courier }) {
+  return {business_courier };
 };
 
 module.exports =  connect(mapStateToProps)(View);

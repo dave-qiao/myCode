@@ -4,7 +4,7 @@ import { Link } from 'dva/router';
 import { stateTransform } from '../../../../../../utils/newUtils';
 const { utcToDate } = window.tempAppTool;
 
-const List = ({ data, _meta, page, loading, onPageChange, listType, dispatch, tabs, city }) => {
+const List = ({ data, _meta, page, loading, onPageChange, listType, dispatch, tabs, city, pageFlage }) => {
   //团队成员删除
   function teamListDelete(index) {
     // 获取点击删除的骑士Id
@@ -19,6 +19,7 @@ const List = ({ data, _meta, page, loading, onPageChange, listType, dispatch, ta
     const city_code = city;
     sessionStorage.setItem('tabs', tabs);
     sessionStorage.setItem('listType', listType);
+
     dispatch({
       type: 'getCourierDetailE',
       payload: { id }
@@ -75,7 +76,7 @@ const List = ({ data, _meta, page, loading, onPageChange, listType, dispatch, ta
         "dataIndex": "state",
         "key": "courier_state",
         render: (text, record) => {
-          return stateTransform('work_state', text);
+          return stateTransform('jobState', text);
         }
       },
       {
@@ -193,7 +194,7 @@ const List = ({ data, _meta, page, loading, onPageChange, listType, dispatch, ta
   }
   const pagination = {
     total: _meta.result_count || 0,
-    current: page,
+    current: pageFlage ? page : 1,
     pageSize: 10,
     onChange: onPageChange
   };

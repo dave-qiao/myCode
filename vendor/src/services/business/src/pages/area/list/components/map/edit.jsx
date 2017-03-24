@@ -397,12 +397,14 @@ class MapEditComponent extends React.Component {
     const regions = [];
     mapObject.getOverlays().forEach((overlay) => {
       //判断坐标数据是否存在，并且区域不是父区域
-      if (Object.prototype.hasOwnProperty.call(overlay, 'ia') && overlay.isParentArea !== true) {
+      if (typeof overlay.getPath === 'function' && overlay.isParentArea !== true) {
         //转换坐标区域的坐标格式
         const points = [];
-        overlay.ia.forEach((point) => {
+        overlay.getPath().forEach((point) => {
           points.push([point.lng, point.lat]);
         });
+        //添加第一个坐标点，实现坐标闭合
+        points.push(points[0]);
         regions.push(points);
       }
     });

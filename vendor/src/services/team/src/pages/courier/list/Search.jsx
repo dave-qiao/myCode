@@ -10,6 +10,7 @@ const Search = Form.create()(({ form, searchs, onSearch, onShowItem, areas, data
   const datas = { _meta };
   //从form中拿到 以下的回调函数
   const { getFieldProps, getFieldsValue } = form;
+
   function handleSubmit(e) {
     e.preventDefault();
     onSearch(getFieldsValue())
@@ -19,6 +20,9 @@ const Search = Form.create()(({ form, searchs, onSearch, onShowItem, areas, data
   return (
 
     <Form horizontal className="ant-advanced-search-form" onSubmit={handleSubmit} key="all">
+      <Input {...getFieldProps("team_id", {
+        initialValue: '',
+      })} style={{display:'none'}}/>
       {/*<Row type="flex" justify="space-between" align="bottom">*/}
       <div className={style.courierOverFlow}>
         <div className={`${style.navLeftBorder} ${style.courierRightTitle}`}>
@@ -39,7 +43,7 @@ const Search = Form.create()(({ form, searchs, onSearch, onShowItem, areas, data
           </FormItem>
           <FormItem label="员工状态"  {...itemLayout} >
             <Select showSearch
-                    optionFilterProp="children" {...getFieldProps("work_state", { initialValue: '100' })} {...{ "placeholder": "骑士状态" }}>
+                    optionFilterProp="children" {...getFieldProps("state", { initialValue: '100' })} {...{ "placeholder": "骑士状态" }}>
 
               <Option value="">全部</Option>
 

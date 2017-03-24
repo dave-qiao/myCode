@@ -119,8 +119,8 @@ let View = ({business_employee, dispatch}) => {
  </Col>
  </Row>
  */
-function mapStateToProps({business_employee, business_publics}) {
-  return {business_employee, business_publics};
+function mapStateToProps({business_employee }) {
+  return {business_employee };
 };
 
 module.exports = connect(mapStateToProps)(View);

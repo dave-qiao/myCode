@@ -1,8 +1,9 @@
 {
   "private": true,
-  "version": "2.0.5",
+  "version": "2.0.19",
   "entry": {
     "index": "./src/index.js",
+    "config": "./src/config.js",
     "vendor": [
       "arale-qrcode",
       "crypto-js",
@@ -11,8 +12,8 @@
   },
   "dependencies": {
     "antd": "^1.10.0",
-    "aoao-core-api-service": "git+ssh://git@github.com/o3cloud/aoao-core-api-service.git#develop",
-    "aoao-style-themes": "git+ssh://git@github.com/o3cloud/aoao-style-themes.git#develop",
+    "aoao-core-api-service": "git+ssh://git@github.com/o3cloud/aoao-core-api-service.git#master",
+    "aoao-style-themes": "git+ssh://git@github.com/o3cloud/aoao-style-themes.git#master",
     "dva": "^0.0.13",
     "gulp-less": "^3.3.0",
     "moment": "^2.17.1",
@@ -58,7 +59,7 @@
   },
   "scripts": {
     "start": "dora  --plugins \"proxy,webpack,webpack-hmr\"",
-    "build": "rm -rf ./dist && atool-build && gulp json-replace && gulp copy_img version_chunk && gulp clean-scripts",
+    "build": "rm -rf ./dist && atool-build && gulp copy_img version_chunk && gulp clean-scripts",
     "tar": "tar -zcvf ./dist.tar.gz ./dist",
     "test": "atool-test-mocha ./src/**/*-test.js",
     "develop": "bash ./.bin/bin.sh develop",

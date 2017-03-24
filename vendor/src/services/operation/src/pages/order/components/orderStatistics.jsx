@@ -1,94 +1,101 @@
-
 import React from 'react';
 import { Row, Col, Input, Button, Form, Table, Radio, Breadcrumb, Alert, Icon, Popover } from 'antd';
 import style from './style.less';
+
+import OrderStatisticsState from './../../exports';
 
 class OrderStatistics extends React.Component {
   constructor(props) {
     super();
     this.state = {
-      totalOrderStatistics: props.totalOrderStatistics, //订单状态
+      orderStatistics: props.orderStatistics, //订单状态
     };
   }
 
   componentWillReceiveProps = (nextProps) => {
     //初始化新数据
     this.setState({
-      totalOrderStatistics: nextProps.totalOrderStatistics,        //当前订单状态
+      orderStatistics: nextProps.orderStatistics,        //当前订单状态
     });
   };
 
   //状态数据面板
   renderOrderStatistics = () => {
-    const { totalOrderStatistics } = this.state;
-
-    //枚举方法－－－公共
-    const orderState = {
-      total: 8888,          //总订单
-      undone: 25,           //未完成 ＊
-      done: 100,            //已完成 ＊
-      unDistribution: 10,   //待分配
-      distribution: 50,     //分配中
-      exception: -50,       //异常
-      canceled: -100,       //已取消 ＊
-      completeRate: 0.88,    //成功率
-
-      //使用初始化
-      description(rawValue) {
-        switch (rawValue) {
-          case this.total:
-            return '总订单';
-          case this.undone:
-            return '未完成';
-          case this.done:
-            return '已完成';
-          case this.unDistribution:
-            return '待分配';
-          case this.distribution:
-            return '已分配';
-          case this.exception:
-            return '异常';
-          case this.canceled:
-            return '取消';
-          case this.completeRate:
-            return '成功率';
-          default:
-            return '其他';
-        }
-      },
-    };
-
+    //数据源
+    const { orderStatistics } = this.state;
     //保存图片资源  －－－－  关联状态和相应状态下的总数
     const orderIcon = [
-      { state: 8888, number: 0, title: orderState.description(orderState.total), src: './images/totalOrder@2x.png' },
-      { state: 25, number: 0, title: orderState.description(orderState.undone), src: './images/undone@2x.png' },
-      { state: 100, number: 0, title: orderState.description(orderState.done), src: './images/done@2x.png' },
-      { state: 10, number: 0, title: orderState.description(orderState.unDistribution), src: './images/undistribution@2x.png' },
-      { state: 50, number: 0, title: orderState.description(orderState.distribution), src: './images/distribution@2x.png' },
-      { state: -50, number: 0, title: orderState.description(orderState.exception), src: './images/exception@2x.png' },
-      { state: -100, number: 0, title: orderState.description(orderState.canceled), src: './images/canceled@2x.png' },
-      { state: 0.88, number: 0, title: orderState.description(orderState.completeRate), src: './images/completeRate@2x.png' },
+      { state: OrderStatisticsState.OrderStatisticsState.total,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.total),
+        src: './images/totalOrder@2x.png',
+      },
+      { state: OrderStatisticsState.OrderStatisticsState.undone,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.undone),
+        src: './images/undone@2x.png',
+      },
+      { state: OrderStatisticsState.OrderStatisticsState.done,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.done),
+        src: './images/done@2x.png',
+      },
+      { state: OrderStatisticsState.OrderStatisticsState.confirmed,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.confirmed),
+        src: './images/undistribution@2x.png',
+      },
+      { state: OrderStatisticsState.OrderStatisticsState.distribution,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.distribution),
+        src: './images/distribution@2x.png',
+      },
+      { state: OrderStatisticsState.OrderStatisticsState.exception,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.exception),
+        src: './images/exception@2x.png',
+      },
+      { state: OrderStatisticsState.OrderStatisticsState.canceled,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.canceled),
+        src: './images/canceled@2x.png',
+      },
+      {
+        state: OrderStatisticsState.OrderStatisticsState.completeRate,
+        number: 0,
+        title: OrderStatisticsState.OrderStatisticsState.description(OrderStatisticsState.OrderStatisticsState.completeRate),
+        src: './images/completeRate@2x.png',
+      },
     ];
 
     //过滤订单数据－根据返回数据的state 和 headerIcon中的state相同，则修改该number
-    if (totalOrderStatistics.length > 0) {
+    if (orderStatistics && orderStatistics.length > 0) {
       let totalNumber = 0;
-      for (let i = 0; i < totalOrderStatistics.length; i ++) {
+      for (let i = 0; i < orderStatistics.length; i++) {
         //统计总订单数
-        totalNumber = totalNumber + totalOrderStatistics[i].count;
+        totalNumber += orderStatistics[i].count;
+        //统计未完成订单
+        if (orderStatistics[i].state === OrderStatisticsState.OrderStatisticsState.confirmed ||
+          orderStatistics[i].state === OrderStatisticsState.OrderStatisticsState.distribution ||
+          orderStatistics[i].state === OrderStatisticsState.OrderStatisticsState.exception) {
+          orderIcon[1].number += orderStatistics[i].count;
+        }
+        //匹配state，并修改相应的number
         for (let j = 1; j < orderIcon.length - 1; j++) {
-          if (totalOrderStatistics[i].state === orderIcon[j].state) {
-            //匹配state，并修改相应的number
-            orderIcon[j].number = totalOrderStatistics[i].count;
+          if (orderStatistics[i].state === orderIcon[j].state) {
+            orderIcon[j].number = orderStatistics[i].count;
           }
         }
       }
       //总订单数
       orderIcon[0].number = totalNumber;
       //成功率
-      /*let b = (1 - (orderIcon[6].number / totalNumber + orderIcon[5].number / totalNumber)).toFixed(3);*/
-      const b = (orderIcon[2].number / totalNumber).toFixed(3);
-      orderIcon[7].number = b.slice(2, 4) + '.' + b.slice(4, 6) + '%';
+      if (totalNumber !== 0) {
+        const b = ((orderIcon[2].number / totalNumber) * 100).toFixed(2);
+        orderIcon[7].number = `${b}%`;
+      } else {
+        orderIcon[7].number = `${0}%`;
+      }
     }
 
     return orderIcon.map((item) => {

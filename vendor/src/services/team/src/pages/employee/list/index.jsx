@@ -41,12 +41,11 @@ class View extends Component {
   }
 
   render() {
-    const {business_employee, business_publics} = this.props;
+    const {business_employee } = this.props;
     const {list_searchs, list_tables} = business_employee;
     const {page, onSearch, onPageChange} = this;
     const searchProps = {
       onSearch,
-      areas: business_publics.areas
     };
     const tableProps = {
       ...list_tables,
@@ -69,8 +68,8 @@ class View extends Component {
 };
 
 
-function mapStateToProps({business_employee,business_publics}) {
-  return {business_employee,business_publics};
+function mapStateToProps({business_employee}) {
+  return {business_employee};
 };
 
 module.exports =  connect(mapStateToProps)(View);

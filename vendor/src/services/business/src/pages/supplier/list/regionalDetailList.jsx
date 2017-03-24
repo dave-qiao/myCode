@@ -52,11 +52,11 @@ class RegionAlDetailList extends Component {
           "dataIndex": "area_name",
           "key": "mobile"
         }, {
-          "title": "状态",
+          "title": "区域状态",
           "dataIndex": "state",
           render: (text, record) => {
             return (
-              <span>{/*record.area.state == 100 ? '启用' : '禁用'*/}</span>
+              <span>{record.area.state == 100 ? '启用' : '禁用'}</span>
             )
           }
         }

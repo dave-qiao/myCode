@@ -20,6 +20,13 @@ module.exports = {
     }
     return s;
   },
+  //判断是否是空对象
+  isEmptyObject(o) {
+      for (let x in o) {
+          return false;
+      }
+      return true;
+  },
   utcToDate: (dateStr) => {
     const _date = new Date(dateStr);
     const [_y,_m,_d,_h,_min,_sec] = [_date.getFullYear(), _date.getMonth() + 1, _date.getDate(), _date.getHours(), _date.getMinutes(), _date.getSeconds()];
@@ -134,6 +141,10 @@ module.exports = {
         '100': '可用',
         '-100': '不可用',
       },
+      jobState: {
+        '100': '在职',
+        '-100': '离职',
+      },
       error_flags: {
         "1": "配送费计算错误",
         "2": "商家取消",
@@ -239,7 +250,34 @@ module.exports = {
     hours = (date.getHours() < 10 ? '0' + date.getHours() + ':' : date.getHours() + ':');
     minnute = (date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes());
     return (year + month + day + hours + minnute);
-  }
+  },
+  /**
+   * 将 prc 时间格式转换为 year-month-day  xx:xx:xx
+   *
+   * @ method prctoMinute
+   *
+   * @ param {string,integer}
+   * string 为 prc 时间格式，
+   * integer: {
+   *  0: year
+   *  2：minutes
+   *  3：second
+   * }
+   *
+   * @ return {string}
+   *
+   */
+  prctoMinute: (prc,length) => {
+    let dates = new Date(prc);
+    const [_y,_m,_d,_h,_min,_sec] = [dates.getFullYear(), dates.getMonth() + 1, dates.getDate(), dates.getHours(), dates.getMinutes(), dates.getSeconds()];
+    let stringDate =  {
+      date: [_y, checkIsBiger10(_m), checkIsBiger10(_d)],
+      time: [checkIsBiger10(_h), checkIsBiger10(_min), checkIsBiger10(_sec)]
+    };
+    stringDate.time.length = length;
+    return `${stringDate.date.join('-')}  ${stringDate.time.join(':')}`;
+
+  },
 };
 function checkIsBiger10(num) {
   return num >= 10 ? num : ('0' + num);

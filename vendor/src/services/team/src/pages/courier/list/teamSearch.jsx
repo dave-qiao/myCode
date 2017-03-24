@@ -16,7 +16,12 @@ const TeamSearch = Form.create()(({ form, searchs, onSearch, onShowItem, data, t
   const { vendor_id }= accountInfo;
   const { getFieldProps, getFieldsValue, resetFields } = form;
   const itemLayout = { "labelCol": { "span": 6 }, "wrapperCol": { "span": 14 } };
+  const searchValue = {
+    tabs: '',
+  };
+  if(searchValue.tabs !== tabs){
 
+  }
   const selectProps = {
     getFieldProps,
     getFieldsValue,
@@ -27,17 +32,6 @@ const TeamSearch = Form.create()(({ form, searchs, onSearch, onShowItem, data, t
     e.preventDefault();
     onSearch(getFieldsValue())
   };
-  /*处理团队名称字符串以便用于详情展示的title*/
-  /*function strhandle(str, direction) {
-   if (direction == 'start') {
-   let num = str.indexOf('-');
-   return str.slice(0, num);
-   }
-   if (direction == 'end') {
-   let num = str.indexOf('-');
-   return str.slice(num + 1, str.length);
-   }
-   }*/
 
   /*确认框展示*/
   function showModal() {
@@ -74,10 +68,10 @@ const TeamSearch = Form.create()(({ form, searchs, onSearch, onShowItem, data, t
 
   return (
     <div className="bd-header">
-      <Form horizontal className="ant-advanced-search-form" onSubmit={handleSubmit} key="authstr"
-            {...getFieldProps("team_id", {
-              initialValue: teamListDetail.id
-            })}>
+      <Form horizontal className="ant-advanced-search-form" onSubmit={handleSubmit} key="authstr">
+        <Input {...getFieldProps("team_id", {
+          initialValue: '',
+        })} style={{display:'none'}}/>
         <div className={style.courierOverFlow}>
           <div className={`${style.navLeftBorder} ${style.courierRightTitle}`} key={teamListDetail.name}>
             {teamListDetail.name || '请选择团队或者骑士'}&nbsp;({teamListDetail.courier_count || 0})
@@ -103,20 +97,20 @@ const TeamSearch = Form.create()(({ form, searchs, onSearch, onShowItem, data, t
         </div>
         <div className={style.navBottomBorder} style={{ marginBottom: '16px' }}></div>
         <Row >
-          <Col sm={6}>
+          <Col sm={8}>
             <FormItem label="姓名" {...itemLayout} >
               <Input {...getFieldProps("name")} {...{ "placeholder": "骑士姓名" }}/>
             </FormItem>
           </Col>
-          <Col sm={6}>
+          <Col sm={8}>
             <FormItem label="手机号" {...itemLayout} >
               <Input {...getFieldProps("mobile")} {...{ "placeholder": "骑士手机号" }}/>
             </FormItem>
           </Col>
-          <Col sm={6}>
+          <Col sm={8}>
             <FormItem label="审核状态" {...itemLayout} >
               <Select showSearch
-                      optionFilterProp="children" {...getFieldProps("verify_state")} {...{ "placeholder": "审核状态" }}>
+                      optionFilterProp="children" {...getFieldProps("verify_state",{initialValue:''})} {...{ "placeholder": "审核状态" }}>
                 <Option value="">全部</Option>
                 <Option value="0">待提交</Option>
                 <Option value="1">待审核</Option>
@@ -124,7 +118,17 @@ const TeamSearch = Form.create()(({ form, searchs, onSearch, onShowItem, data, t
               </Select>
             </FormItem>
           </Col>
-          <Col sm={6}>
+          <Col sm={8}>
+            <FormItem label="在岗状态" {...itemLayout} >
+              <Select showSearch
+                      optionFilterProp="children" {...getFieldProps("work_state",{initialValue:''})} {...{ "placeholder": "在岗状态" }}>
+                <Option value="">全部</Option>
+                <Option value="100">在岗</Option>
+                <Option value="-100">离岗</Option>
+              </Select>
+            </FormItem>
+          </Col>
+          <Col sm={8}>
             <FormItem label="" {...itemLayout}>
               <Button htmlType="submit">查询</Button>
             </FormItem>
@@ -158,8 +162,8 @@ class Selected extends Component {
     )
   }
 }
-function mapStateToProps({ business_courier, business_publics }) {
-  return { business_courier, business_publics };
+function mapStateToProps({ business_courier }) {
+  return { business_courier };
 };
 
 module.exports = connect(mapStateToProps)(TeamSearch);

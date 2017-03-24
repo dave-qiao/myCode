@@ -1,6 +1,7 @@
 import React, {Component, PropTypes} from 'react';
 import {Button, Table, Pagination } from 'antd';
 import { Link } from 'dva/router';
+import { isEmptyObject } from '../../../../../../utils/newUtils';
 const {stateTransform, utcToDate, numberDateToStr} =  window.tempAppTool;
 const List = ({ data, _meta, page, loading, onPageChange}) => {
 
@@ -26,8 +27,11 @@ const List = ({ data, _meta, page, loading, onPageChange}) => {
           <span>{record.supply_vendor_info?record.supply_vendor_info.name:''}</span>
         )
       }
-    },
-    {
+    },{
+      "title": "区域",
+      "dataIndex": "area.name",
+      "key": "area.name"
+    },{
       "title": "骑士",
       "dataIndex": "courier",
       "key": "courier_key",
@@ -36,13 +40,7 @@ const List = ({ data, _meta, page, loading, onPageChange}) => {
           return text.name;
         }
       }
-    },
-    // {
-    //   "title": "区域",
-    //   "dataIndex": "courier",
-    //   "key": "courier"
-    // },
-      {
+    }, {
       "title": "配送距离（km）",
       "dataIndex": "distance",
       "key": "distance",
@@ -121,17 +119,29 @@ const List = ({ data, _meta, page, loading, onPageChange}) => {
         text1 = text1.toFixed(2)
         return text1;
       }
-    },
-    // {
-    //   "title": "商家付款",
-    //   "dataIndex": "installment",
-    //   "key": "installment"
-    // }, {
-    //   "title": "顾客收款",
-    //   "dataIndex": "Method",
-    //   "key": "Method"
-    // },
-    {
+    },{
+      "title": "代付商家 (元) ",
+      "dataIndex": "extra_services.payment",
+      "key": "extra_services.payment",
+      render: (text) => {
+        if(text && !isEmptyObject(text)) {
+          return (Number(text.amount)/100).toFixed(2);
+        } else {
+          return '0.00';
+        }
+      }
+    }, {
+      "title": "代收顾客 (元) ",
+      "dataIndex": "extra_services.cod",
+      "key": "extra_services.cod",
+      render: (text) => {
+        if(text && !isEmptyObject(text)) {
+          return (Number(text.amount)/100).toFixed(2);
+        } else {
+          return '0.00';
+        }
+      }
+    },{
       "title": "下单时间",
       "dataIndex": "created_at",
       "key": "created_at",

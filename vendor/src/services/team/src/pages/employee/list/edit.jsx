@@ -242,11 +242,10 @@ class MainForm extends React.Component {
 MainForm = Form.create()(MainForm);
 
 
-let View = ({business_employee, dispatch, business_publics}) => {
+let View = ({business_employee, dispatch }) => {
   const formProps = {
     dispatch,
     details: business_employee.list_details,
-    areas: business_publics.areas
   };
   return (
     <div className="con-body">
@@ -255,8 +254,8 @@ let View = ({business_employee, dispatch, business_publics}) => {
   );
 };
 
-function mapStateToProps({business_employee, business_publics}) {
-  return {business_employee, business_publics};
+function mapStateToProps({business_employee }) {
+  return {business_employee };
 };
 
 module.exports = connect(mapStateToProps)(View);

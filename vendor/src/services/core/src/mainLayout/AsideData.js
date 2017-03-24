@@ -1,22 +1,22 @@
 const _menu = [
-  // {
-  //   title: '运营中心',
-  //   icon: 'user',
-  //   subItems: [
-  //     {
-  //       icon: 'user',
-  //       title: '分单中心',
-  //       a_path: '/#/operation/order',
-  //       hasThird: false,
-  //       /*thirdItems: [
-  //         {
-  //           title: '异常单列表',
-  //           a_path: '/#/operation/order/close',
-  //         },
-  //       ],*/
-  //     },
-  //   ],
-  // },
+  {
+    title: '运营中心',
+    icon: 'user',
+    subItems: [
+      {
+        icon: 'user',
+        title: '分单中心',
+        a_path: '/#/operation/order',
+        hasThird: false,
+        /*thirdItems: [
+          {
+            title: '异常单列表',
+            a_path: '/#/operation/order/close',
+          },
+        ],*/
+      },
+    ],
+  },
   {
     title: '调度中心',
     icon: 'share-alt',
@@ -77,6 +77,21 @@ const _menu = [
         thirdItems: [],
       }, //区域管理
       {
+        title: '团队管理',
+        icon: 'team',
+        hasThird: true,
+        thirdItems: [
+          {
+            title: '员工列表',
+            a_path: '/#/team/employee/list',
+          },
+          {
+            title: '团队列表',
+            a_path: '/#/team/courier/list',
+          },
+        ],
+      },
+      {
         icon: 'user',
         title: '商家管理',
         hasThird: true,
@@ -114,22 +129,6 @@ const _menu = [
       {
         title: '商家账单',
         a_path: '/#/finance/seller_bills/list',
-        hasThird: false,
-      },
-    ],
-  },
-  {
-    title: '团队管理',
-    icon: 'team',
-    subItems: [
-      {
-        title: '员工列表',
-        a_path: '/#/team/employee/list',
-        hasThird: false,
-      },
-      {
-        title: '团队列表',
-        a_path: '/#/team/courier/list',
         hasThird: false,
       },
     ],

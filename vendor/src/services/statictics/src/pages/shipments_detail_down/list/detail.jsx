@@ -1,91 +1,85 @@
-import React, {Component, PropTypes} from 'react';
+import React, { Component, PropTypes } from 'react';
 import { Form, Table, Row, Col, Popconfirm, Button } from 'antd';
-import {connect} from 'dva';
+import { connect } from 'dva';
 import { Link } from 'dva/router';
-const {stateTransform, numberDateToStr, utcToDate} = window.tempAppTool;
+const { stateTransform, numberDateToStr, utcToDate } = window.tempAppTool;
 
 const [FormItem] = [Form.Item];
 const event_dict = {
-  'created': '创建',
-  'accepted': '接单'
+  created: '创建',
+  accepted: '接单',
 };
 
 const reasons = {};
 
-let View = ({statictics_shipments_detail, dispatch}) => {
-  const {shipment_detail, shipment_log = {data: []}, shipment_area} = statictics_shipments_detail;
+const View = ({ statictics_shipments_detail, dispatch }) => {
+  const { shipment_detail, shipment_log = { data: [] }, shipment_area } = statictics_shipments_detail;
   const { order_info = {}, vendor_info = {}, shop_info = {} } = shipment_detail;
   const closed_type = reasons[shipment_detail.closed_type];
   const vendor_name = window.currentAppVendorInfo.name;
   const courier = shipment_detail.courier || {};
   let [shipping_time, created_at] = ['', ''];
   // 服务商提成
-  let _local_calc_fee_vendor = (shipment_detail.shipping_fee_vendor + shipment_detail.tip_fee_vendor) /100;
+  const _local_calc_fee_vendor = (shipment_detail.shipping_fee_vendor + shipment_detail.tip_fee_vendor) / 100;
   // 骑士提成
-  let _local_calc_fee_courier = (shipment_detail.shipping_fee_courier + shipment_detail.tip_fee_courier) / 100;
+  const _local_calc_fee_courier = (shipment_detail.shipping_fee_courier + shipment_detail.tip_fee_courier) / 100;
 
-  if(shipment_detail.created_at &&  shipment_detail.created_at.length !== 0) {
+  if (shipment_detail.created_at && shipment_detail.created_at.length !== 0) {
     const _date1 = utcToDate(shipment_detail.created_at);
     _date1.time.length = 2;
     created_at = `${_date1.date.join('-')}  ${_date1.time.join(':')}`;
     shipping_time = `${numberDateToStr(shipment_detail.plan_shipping_date)}  ${shipment_detail.plan_shipping_time}`;
-  };
-  const itemLayout = { '4_18': { "labelCol": { "span": 4 }, "wrapperCol": { "span": 18 } } };
+  }
+  const itemLayout = { '4_18': { labelCol: { span: 4 }, wrapperCol: { span: 18 } } };
   const columns = [
     {
-      "title": "运单状态",
-      "dataIndex": "event_state",
-      "key": "event_state",
-      render:(text,record) => {
-        return stateTransform('event_name',record.event)
-      }
+      title: '运单状态',
+      dataIndex: 'event_state',
+      key: 'event_state',
+      render: (text, record) => {
+        return stateTransform('event_name', record.event)
+      },
     },
     {
-      "title": "操作",
-      "dataIndex": "event",
-      "key": "event",
-      render:(text) => {
-        return stateTransform('state_operation',text)
-      }
+      title: '操作',
+      dataIndex: 'event',
+      key: 'event',
+      render: (text) => {
+        return stateTransform('state_operation', text)
+      },
     }, {
-      "title": "操作时间",
-      "dataIndex": "created_at",
-      "key": "created_at",
-      render: (text,record) => {
-        let _result = utcToDate(text);
+      title: '操作时间',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render: (text, record) => {
+        const _result = utcToDate(text);
         _result.time.length = 2;
-        return _result.date.join('-') + '  ' + _result.time.join(':');
-      }
+        return `${_result.date.join('-')}  ${_result.time.join(':')}`;
+      },
     }, {
-      "title": "操作人(手机号)",
-      "dataIndex": "operator",
-      "key": "operator",
-      render: (text,record) => {
+      title: '操作人(手机号)',
+      dataIndex: 'operator',
+      key: 'operator',
+      render: (text, record) => {
         if (record.event === 'created') {
-          return shipment_detail.consignor_name + '(' + shipment_detail.consignee_mobile+')' || '(' + shipment_detail.consignor.tel + ')';
+          return `${shipment_detail.consignor_name}(${shipment_detail.consignee_mobile})` || `(${shipment_detail.consignor.tel})`;
         }
         if (record.event === 'confirmed' && (record.operator_info === '' || record.operator_info === undefined)) {
           return '系统自动操作';
         }
         if (record.operator_info) {
-          return record.operator_info.name + '('+record.operator_info.mobile + ')';
+          return `${record.operator_info.name}(${record.operator_info.mobile})`;
         }
         if (record.courier_info) {
-          return record.courier_info.name + '(' + record.courier_info.mobile +')';
+          return `${record.courier_info.name}(${record.courier_info.mobile})`;
         }
-      }
+      },
     }, {
-      "title": "备注",
-      "dataIndex": "note",
-      "key": "note"
-    }
+      title: '备注',
+      dataIndex: 'note',
+      key: 'note',
+    },
   ];
-
-  let data = shipment_log.data;
-
-  if(data){
-    data = data.reverse();
-  }
 
   return (
     <div className="con-body">
@@ -101,7 +95,7 @@ let View = ({statictics_shipments_detail, dispatch}) => {
                 {shipment_detail.consignor_name}
               </FormItem>
               <FormItem label="商品类型" {...itemLayout['4_18']}>
-                {stateTransform('seller_type',shipment_detail.seller_type)}
+                {stateTransform('seller_type', shipment_detail.seller_type)}
               </FormItem>
               <FormItem label="商家电话" {...itemLayout['4_18']}>
                 {shipment_detail.consignor_mobile || shipment_detail.consignor_tel}
@@ -154,7 +148,7 @@ let View = ({statictics_shipments_detail, dispatch}) => {
                 {shipment_detail.local_calc_shipping_fee} 元
               </FormItem>
               <FormItem label="结算方式" {...itemLayout['4_18']}>
-                {stateTransform('pay_type',shipment_detail.pay_type)}
+                {stateTransform('pay_type', shipment_detail.pay_type)}
               </FormItem>
               <FormItem label="骑士提成" {...itemLayout['4_18']}>
                 {_local_calc_fee_courier || 0} 元
@@ -168,14 +162,14 @@ let View = ({statictics_shipments_detail, dispatch}) => {
         <Form horizontal className="main-form">
           <h3 className="form-divider-header">物流追踪</h3>
           <Row type="flex" justify="center">
-            <Col sm ={24}>
-              <Col sm ={6}>运单号:{shipment_detail.id}</Col>
-              <Col sm ={4}>配送区域：{shipment_area.name} </Col>
-              <Col sm ={4}>骑士：{courier.name}</Col>
-              <Col sm ={4}>联系电话：{courier.mobile}</Col>
+            <Col sm={24}>
+              <Col sm={6}>运单号:{shipment_detail.id}</Col>
+              <Col sm={4}>配送区域：{shipment_area.name} </Col>
+              <Col sm={4}>骑士：{courier.name}</Col>
+              <Col sm={4}>联系电话：{courier.mobile}</Col>
             </Col>
           </Row>
-          <br/>
+          <br />
           <Row type="flex" justify="center">
             <Col sm={22}>
               <Table columns={columns} dataSource={data} />
@@ -192,8 +186,8 @@ let View = ({statictics_shipments_detail, dispatch}) => {
   );
 };
 
-function mapStateToProps({statictics_shipments_detail}) {
-  return {statictics_shipments_detail};
-};
+function mapStateToProps({ statictics_shipments_detail }) {
+  return { statictics_shipments_detail };
+}
 
 module.exports = connect(mapStateToProps)(View);

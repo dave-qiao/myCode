@@ -13,13 +13,27 @@ class Search extends Component {
   constructor() {
     super()
     this.state = {
-      visible: false
+      visible: false,
+      VendorSupplierList: [],
+      city_code: '',
     }
   }
 
-  componentWillReceiveProps = () => {
-
-  }
+  componentWillReceiveProps = (nextProps) => {
+    const { VendorSupplierList, city_code } = nextProps;
+    const _accountInfo = window.getStorageItem('accountInfo') || '{}';
+    const { vendor_id } = JSON.parse(_accountInfo);
+    // 将当前服务商从 添加供应商列表中删除
+    for (var i = 0; i < VendorSupplierList.length; i++) {
+      if (VendorSupplierList[i].id == vendor_id) {
+        VendorSupplierList.splice(i, 1);
+      }
+    }
+    this.setState({
+      VendorSupplierList: VendorSupplierList,
+      city_code: city_code,
+    })
+  };
 
   showModal = ()=> {
     this.setState({
@@ -83,7 +97,7 @@ class Search extends Component {
       payload: { city_code, state, verify_state },
     });
 
-  }
+  };
 
   // 按条件查询
   search = ()=> {
@@ -101,18 +115,10 @@ class Search extends Component {
     const { vendor_id } = JSON.parse(_accountInfo);
     /*const { city_code } = JSON.parse(userInfo);*/
     let type = this.props.type;
-
+    const city_code = this.state.city_code;
     // 获取form提供的api
-    const { VendorSupplierList, city_code, serviceCityList } = this.props;
+    const { serviceCityList } = this.props;
     const { getFieldProps } = this.props.form;
-
-    // 将当前服务商从 添加供应商列表中删除
-    for (var i = 0; i < VendorSupplierList.length; i++) {
-      if (VendorSupplierList[i].id == vendor_id) {
-        VendorSupplierList.splice(i, 1);
-      }
-    }
-
     return (
       <div>
 
@@ -187,7 +193,7 @@ class Search extends Component {
                       })}
                     >
                       {
-                        VendorSupplierList.map(function (item, index) {
+                        this.state.VendorSupplierList.map(function (item, index) {
                           return (
                             <Option key={item.id} value={item.id}>{item.name}</Option>
                           )

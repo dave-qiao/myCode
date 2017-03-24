@@ -21,10 +21,11 @@ export async function getTeamDetail(team_id) {
   return request(`team/${team_id}`).then((data) => data.data);
 }
 //获取待审核骑士数据
-export async function readyCourierState(vendor_id, verify_state) {
+export async function readyCourierState(vendor_id, verify_state, city_code) {
   const value = {
     vendor_id: vendor_id,
     verify_state: verify_state,
+    city_code: city_code,
   };
   return request(`couriers/?${qs.stringify(value)}`).then((data) => data.data);
 }

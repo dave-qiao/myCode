@@ -14,6 +14,8 @@ import {
   vendor_merchant_find
 } from 'aoao-core-api-service/lib/business.js';
 
+import { fetchCityList } from '../../../aoao-core-api-service/src/public';
+
 // 跳转到详情页面
 function toDetail(id) {
   window.location.href = `/#/business/seller/list/detail?id=${id}`;
@@ -47,7 +49,8 @@ module.exports = {
     shops_info:{ //商家的店铺信息
       data:[],//商家的列表数据字段
       _meta:{}// 服务器端返回的附带信息（包括总共多少条，后面还有没有数据的一个对象）
-    }
+    },
+    serviceCityList: [],  //服务商服务城市
   },
 
   subscriptions: [
@@ -74,6 +77,11 @@ module.exports = {
             type: SELLER.find, //见模块的ActionName.js
             payload: {history_vendor_id:vendor_id,state:100}
           });
+          //获取该服务商下所有城市
+          dispatch({
+            type: 'getServiceCityListE',
+            payload: { vendor_id }
+          })
         };
         if (detailPaths.indexOf(pathname) !== -1) {
           dispatch({
@@ -214,6 +222,15 @@ module.exports = {
       }
     },
 
+    // 获取服务商服务城市
+    *getServiceCityListE(params){
+      const serviceCityList = yield call(fetchCityList, params.payload.vendor_id);
+      yield put({
+        type: 'getServiceCityListR',
+        payload: serviceCityList,
+      })
+    }
+
   },
 
   reducers: {
@@ -258,5 +275,15 @@ module.exports = {
     ['seller/createSuccess'](state, action) {},
     // 更新商家信息成功
     ['seller/updateSuccess'](state, action) {},
+
+    // 服务商可服务城市
+    getServiceCityListR(state, action){
+      const { serviceCityList } =state;
+      Object.assign(serviceCityList, action.payload);
+      return {
+        ...state,
+        serviceCityList,
+      }
+    },
   },
 }

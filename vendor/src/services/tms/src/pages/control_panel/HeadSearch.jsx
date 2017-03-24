@@ -8,9 +8,23 @@ class HeadSearch extends Component {
   constructor(props) {
     super();
     // 将区域名称存放到页面的内部state中
-    this.state = { area_name: '' };
-
+    this.state = { area_name: '', city_name: '', area_id: '', city_code: '' };
+    this.private = {
+      area_id: '',
+      area_name: '',
+      city_code: '',
+      city_name: '',
+    }
   }
+
+  componentWillMount() {
+    const  {default_area_id, default_area_name, default_city_code, default_city_name } = this.props;
+    this.private.area_id = default_area_id;
+    this.private.area_name = default_area_name;
+    this.private.city_code = default_city_code;
+    this.private.city_name = default_city_name;
+  }
+
   componentWillReceiveProps = (nextProps) =>{
     const {flag} = this;
     let _that = this;
@@ -23,11 +37,10 @@ class HeadSearch extends Component {
       default_area_id1 = nextProps.default_area_id;
       default_area_name1 = nextProps.default_area_name;
     }
-
   }
+  
   // 提交函数
   handleSubmit = (e) => {
-
       e.preventDefault();
       const {handleSearch, form} = this.props;
       const {getFieldsValue} = form;
@@ -36,11 +49,39 @@ class HeadSearch extends Component {
       handleSearch(getFieldsValue());
   }
 
+  //更新城市函数
+  handleCityChange = (value) => {
+    const {cityChange, serviceCityList} = this.props;
+    cityChange(value);
+    let city_name = '';
+    for(let city_list of serviceCityList) {
+      if(city_list.city_code === value) {
+        city_name = city_list.city_name;
+        break;
+      };
+    };
+    const cityInfo = {
+      city_code: value,
+      city_name: city_name
+    }
+    this.private.city_code = value;
+    this.private.city_name = city_name;
+    //当更新城市时，设置缓存，以便其他页面返回时获取数据，同时清空区域缓存
+    window.sessionStorage && sessionStorage.setItem('CITYINFO', JSON.stringify(cityInfo));
+    window.sessionStorage && sessionStorage.removeItem('AREAINFO');
+    
+    this.setState({ city_name, area_name: '-' });
+    if(city_name.length !== 0) {
+      message.success(`已切换城市为${city_name}。`);
+    };
+    
+
+  }
+
   // 更新区域的函数
   handleAreaChange = (value) => {
     const {areaChange, areas_data} = this.props;
     //向上传area_id
-    console.log(value,'arrea_id------');
     areaChange(value);
     //更新本地的区域名称
     let area_name = '';
@@ -50,38 +91,87 @@ class HeadSearch extends Component {
         break;
       };
     };
+    const areaInfo = {
+      area_id: value,
+      area_name: area_name
+    }
+    this.private.area_id = value;
+    this.private.area_name = area_name;
+    //当更新区域时，设置缓存，以便其他页面返回时获取数据
+    window.sessionStorage && sessionStorage.setItem('AREAINFO', JSON.stringify(areaInfo));
     this.setState({ area_name });
     if(area_name.length !== 0) {
       message.success(`已切换区域为${area_name}。`);
     };
-
   };
+
+  componentWillUnmount() {
+    // 卸载组件时，删除记录的状态  ！！！浏览器刷新非组件卸载
+    const areaInfo = {
+      area_id: this.private.area_id,
+      area_name: this.private.area_name
+    }
+    const cityInfo = {
+      city_code: this.private.city_code,
+      city_name: this.private.city_name
+    }
+    window.sessionStorage && sessionStorage.setItem('AREAINFO', JSON.stringify(areaInfo));
+    window.sessionStorage && sessionStorage.setItem('CITYINFO', JSON.stringify(cityInfo));
+    
+    const { areaChange, cityChange } = this.props;
+    
+    areaChange(this.private.area_id);
+    cityChange(this.private.city_code);
+  }
+
 
   // 伸缩的div
   toggleStyle = () => {
       var div = document.getElementById("toggleDiv")
       var button = document.getElementById("button")
       var Icon = document.getElementById("Icon")
-     if(div.style.left == '-190px'){
+     if(div.style.left == '-366px'){
          div.style.left='0px'
          button.innerHTML = '收起'
          div.style.transition = 'left 1s'
      }else if(div.style.left == '0px'){
-        div.style.left='-190px'
+        div.style.left='-366px'
         button.innerHTML = '切换'
      }
   }
 
   render() {
 //   从props里面获取信息
-    const {form, areas_data=[], default_area_id, default_area_name, city_name, Allrefresh, default_couriers,stateChange} = this.props;
+    let {form, updateArea_id, updateCityCode, areas_data=[], serviceCityList=[], default_city_code, default_city_name, default_area_id, default_area_name, Allrefresh, default_couriers,stateChange} = this.props;
     // 从form里面获取信息
     const {getFieldProps} = form;
     // 从this里面获取信息
-    const {handleSubmit, handleAreaChange, toggleStyle} = this;
+    const {handleSubmit, handleAreaChange, handleCityChange, toggleStyle} = this;
     // 从this.state里面获取信息
-    const {area_name} = this.state;
+    const {area_name, city_name} = this.state;
+    //解决页面返回时 store 缓存问题（model设置机制问题）
+    const areaInfo = window.sessionStorage && JSON.parse(sessionStorage.getItem('AREAINFO'))
+    const cityInfo = window.sessionStorage && JSON.parse(sessionStorage.getItem('CITYINFO'))
+    // const unmountKey = window.sessionStorage && JSON.parse(sessionStorage.getItem('COMPONENT_UNMOUNT'));
 
+    if (areas_data.length > 0) {
+      if (areaInfo && areaInfo.area_id && areaInfo.area_name) {
+        default_area_id = areaInfo.area_id;
+        default_area_name = areaInfo.area_name;
+      }
+    }
+    if (serviceCityList.length > 0) {
+      if (cityInfo && cityInfo.city_code && cityInfo.city_name) {
+        default_city_code = cityInfo.city_code;
+        default_city_name = cityInfo.city_name;
+      }
+    }
+    updateArea_id(default_area_id)
+    updateCityCode(default_city_code)
+    this.private.area_id = default_area_id;
+    this.private.area_name = default_area_name;
+    this.private.city_code = default_city_code;
+    this.private.city_name = default_city_name;
 
     //取当前时间
     let _date = dateFormat();
@@ -105,22 +195,40 @@ class HeadSearch extends Component {
     );
     return (
       <Form inline onSubmit={handleSubmit} style={{height:'42px',boxSizing:'border-box', padding: '5px 0'}}>
-       <Row>
+       <Row  style={{ minWidth:'1100px' }}>
          <Col span={1}>
-           <div id="toggleDiv"  style={{width:'168px',height:'35px',position:'absolute',left:'-190px',top:'3px',zIndex:'22',background:'#fff',padding:'5px'}}>
-             <Select showSearch optionFilterProp="children" onChange={handleAreaChange} placeholder={default_area_name} defaultValue={default_area_id}  style={{ width: 150 }} >
+           <div id="toggleDiv"  style={{width:'350px',height:'35px',position:'absolute',left:'-366px',top:'3px',zIndex:'22',background:'#fff',padding:'5px'}}>
+            {
+              serviceCityList.length > 0 && default_city_code && <Select showSearch optionFilterProp="children" onChange={ handleCityChange } placeholder={ default_city_name } defaultValue={ default_city_code }  style={{ width: 150 }} >
                 {
-                  areas_data.map((item,index) =>{
-                    return <Option key={item.id} value={item.id}>{item.name}</Option>
+                  serviceCityList.map((item,index) =>{
+                    return <Option key={item.city_code +''+ index } value={item.city_code}>{item.city_name}</Option>
                   })
                 }
              </Select>
+            }
+             &nbsp;&nbsp;
+             {
+               (areas_data.length > 0 && default_area_id) ? <Select showSearch optionFilterProp="children" onChange={handleAreaChange}  placeholder={default_area_name} defaultValue={ default_area_id }  style={{ width: 150 }} >
+                {
+                  areas_data.map((item,index) => {
+                    return <Option key={item.id +''+ index} value={item.id}>{item.name}</Option>
+                  })
+                }
+             </Select> : <Select showSearch optionFilterProp="children" onChange={handleAreaChange}  placeholder={default_area_name} style={{ width: 150 }} >
+                {
+                  areas_data.map((item,index) =>{
+                    return <Option key={item.id +''+ index} value={item.id}>{item.name}</Option>
+                  })
+                }
+             </Select> 
+             }
              <Button id="button" className="toggle-button" onClick={toggleStyle}>
                切换
              </Button>
            </div>
          </Col>
-         <Col span={5}>
+         <Col span={5} style={{ minWidth:'240px' }}>
             <div style={{
               display: 'flex',
               flexWrap: 'wrap',
@@ -128,7 +236,7 @@ class HeadSearch extends Component {
               lineHeight:'38px'
             }}>
               <div>
-                {city_name}&nbsp;
+                {city_name || default_city_name}&nbsp;
               </div>
               <div>
                 {area_name || default_area_name}&nbsp;
@@ -143,7 +251,10 @@ class HeadSearch extends Component {
             </div>
 
          </Col>
-         <Col span={15} style={{paddingLeft:'10px'}}>
+         <Col span={12} style={{paddingLeft:'10px'}}>
+          <FormItem label="订单号">
+            <Input  {...getFieldProps("org_order_id")} {...{"placeholder":"请输入订单号"}}/>
+          </FormItem>
            <FormItem label="骑士">
              <Select placeholder="请输入骑士姓名/骑士手机" showSearch  optionFilterProp="children" {...getFieldProps("courier_id")}
              filterOption={(inputValue, option) => {

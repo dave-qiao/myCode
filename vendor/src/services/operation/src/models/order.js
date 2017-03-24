@@ -7,6 +7,7 @@ import { message } from 'antd';
 
 import {
   fetchTotalOrderStatistics,   //获取订单状态
+  fetchSellerOrderStatistics,  //获取服务商订单状态
   fetchOrderCityList,          //获取城市列表
 
   fetchSellerOrderList,        //获取商家订单列表
@@ -16,11 +17,9 @@ import {
   fetchCloseOrderList,         //异常订单列表
   fetchCloseOrderDetail,       //异常订单详情
   fetchCloseOrderLog,          //异常订单日志
+  fetchCloseOrderRedivides,    //异常订单操作－－－重新分单
+  fetchCloseOrder,             //异常订单操作－－－关闭订单
 } from '../services/order';
-
-  //请求的每页数据条数
-const requestPagerSize = 12;
-const requestPageNumber = 1;
 
 module.exports = {
   //module层命名
@@ -28,33 +27,34 @@ module.exports = {
 
   // 初始化数据源
   state: {
-    totalOrderStatistics: [], //总订单状态
-    cityList: [],             //城市选择清单
+    totalOrderStatistics: [],  //总订单状态
+    sellerOrderStatistics: [], //供应商订单状态
+    cityList: [],              //城市选择清单
 
-    sellerOrderList: [],      //商家订单列表
+    sellerOrderList: [],       //商家订单列表
 
-    //vendorOrderList: [],    //服务商订单列表
-    areaOrderList: [],        //区域订单列表
+    areaOrderList: [],         //区域订单列表
 
-    closeOrderList: [],       //异常订单列表
-    closeOrderDetail: [],     //异常订单详情
-    closeOrderLog: [],        //异常订单日志
+    closeOrderList: [],        //异常订单列表
+    closeOrderDetail: [],      //异常订单详情
+    closeOrderLog: [],         //异常订单日志
+    redivideOder: {},          //异常订单操作---重新分单
+    closeOrder: {},            //异常订单操作---关闭订单
+
+    sellerMeta: {},            //商家
+    closeMeta: {},             //异常订单列表
+    detailMeta: {},            //详情
+    areaMeta: {},              //服务商（区域）列表
   },
 
   subscriptions: [
     function ({ dispatch, history }) {
-     // const detailPaths = ['/business/area/list/detail', '/business/area/list/edit'];
       history.listen((location) => {
-        const AccountSet = JSON.parse(window.localStorage.getItem('accountInfo') || '{}');
-        const UserSet = JSON.parse(window.localStorage.getItem('userInfo') || '{}');
-
-        const date = window.localStorage.getItem('date') || ' ';
-        const startDate = window.localStorage.setItem('startDate', '');
-        const endDate = window.localStorage.setItem('endDate', '');
+        const AccountSet = JSON.parse(window.getStorageItem('accountInfo') || '{}');
 
         const { vendor_id } = AccountSet;
-        const { city_code } = UserSet;
         const { pathname } = location;
+        const vendorId = vendor_id;
 
        //---------pathname用于监视是否当前路径需要请求接口----------
 
@@ -63,30 +63,8 @@ module.exports = {
           //filter获取此服务商存在的城市列表
           dispatch({
             type: 'fetchOrderCityList',
-            payload: vendor_id,
+            payload: vendorId,
           });
-
-          //获取订单状态
-          dispatch({
-            type: 'fetchTotalOrderStatistics',
-            payload: {
-              vendorId: vendor_id,
-              cityCode: city_code ? city_code : 110000,
-              shippingDate: date },
-          });
-
-          //获取商家列表
-          dispatch({
-            type: 'fetchSellerOrderList',
-            payload: {
-              vendorId: vendor_id,
-              cityCode: city_code ? city_code : 110000,
-              shippingDate: date,
-              page: requestPageNumber,     //页码
-              limit: requestPagerSize,     //分页
-              sort:  '{created_at: -1}',   //排序按照创建时间排序：－1代表倒叙排列；默认按照 最早创建的显示在最前面。
-            },
-          })
         }
 
         //异常订单查看
@@ -94,32 +72,9 @@ module.exports = {
           //filter获取此服务商存在的城市列表
           dispatch({
             type: 'fetchOrderCityList',
-            payload: vendor_id,
+            payload: vendorId,
           });
-
-          /*//异常订单列表
-          dispatch({
-            type: 'fetchCloseOrderList',
-            payload: {
-              vendorId: vendor_id,
-              cityCode: city_code ? city_code : 110000,
-              startDate,
-              endDate,
-              state: -100,
-              page: requestPageNumber,     //页码
-              limit: requestPagerSize,     //分页
-              sort:  '{created_at: -1}',   //排序按照创建时间排序：－1代表倒叙排列；默认按照 最早创建的显示在最前面。
-            },
-          });*/
         }
-
-        //异常订单详情---写在detail页面中增加组件复用性
-        /*if (pathname === '/operation/order/close/detail') {
-          dispatch({
-            type: 'fetchCloseOrderDetail',
-            payload: id,
-          });
-        }*/
       });
     },
   ],
@@ -139,25 +94,35 @@ module.exports = {
       yield put({ type: 'reducerTotalOrderStatistics', payload: response });
     },
 
+    //获取商家订单状态
+    * fetchSellerOrderStatistics({ payload }) {
+      const { vendorId, sellerId, cityCode, shippingDate } = payload;
+      const response = yield call(fetchSellerOrderStatistics, vendorId, sellerId, cityCode, shippingDate);
+      yield put({ type: 'reducerSellerOrderStatistics', payload: response });
+    },
+
     //获取商家订单列表---, page, limit, sort
     * fetchSellerOrderList({ payload }) {
       const { vendorId, cityCode, shippingDate, page, limit, sort } = payload;
-      const response = yield call(fetchSellerOrderList, vendorId, cityCode, shippingDate);
-      yield put({ type: 'reducerSellerOrderList', payload: response });
+      const response = yield call(fetchSellerOrderList, vendorId, cityCode, shippingDate, page, limit, sort);
+      const payloadData = { sellerOrderList: response.data, sellerMeta: response._meta };
+      yield put({ type: 'reducerSellerOrderList', payloadData });
     },
 
     //获取区域订单列表---, page, limit, sort
     * fetchAreaOrderList({ payload }) {
       const { sellerId, vendorId, cityCode, shippingDate, page, limit, sort } = payload;
-      const response = yield call(fetchAreaOrderList, sellerId, vendorId, cityCode, shippingDate);
-      yield put({ type: 'reducerAreaOrderList', payload: response });
+      const response = yield call(fetchAreaOrderList, sellerId, vendorId, cityCode, shippingDate, page, limit, sort);
+      const payloadData = { areaOrderList: response.data, areaMeta: response._meta };
+      yield put({ type: 'reducerAreaOrderList', payloadData });
     },
 
     //获取异常订单列表
     * fetchCloseOrderList({ payload }) {
       const { vendorId, cityCode, startDate, endDate, state, page, limit, sort } = payload;
       const response = yield call(fetchCloseOrderList, vendorId, cityCode, startDate, endDate, state, page, limit, sort);
-      yield put({ type: 'reducerCloseOrderList', payload: response });
+      const payloadData = { closeOrderList: response.data, closeMeta: response._meta };
+      yield put({ type: 'reducerCloseOrderList', payloadData });
     },
 
     //获取异常订单详情
@@ -167,11 +132,29 @@ module.exports = {
     },
 
     //获取异常订单日志
-    * fetchCloseOrderLog({ payload: shipmentId }) {
-      const response = yield call(fetchCloseOrderLog, shipmentId);
-      yield put({ type: 'reducerCloseOrderLog', payload: response });
+    * fetchCloseOrderLog({ payload }) {
+      const { shipmentId, page, limit, sort } = payload;
+      const response = yield call(fetchCloseOrderLog, shipmentId, page, limit, sort);
+     // const response = yield call(fetchCloseOrderLog, shipmentId);
+      const payloadData = { closeOrderLog: response.data, detailMeta: response._meta };
+      yield put({ type: 'reducerCloseOrderLog', payloadData });
     },
 
+    //获取异常订单操作－－-重新分单
+    * fetchCloseOrderRedivides({ payload }) {
+      const { vendorId, orderId, operatorId, note } = payload;
+      const response = yield call(fetchCloseOrderRedivides, vendorId, orderId, operatorId, note);
+      const payloadData = { redivideOder: response.data };
+      yield put({ type: 'reducerCloseOrderRedivides', payloadData });
+    },
+
+    //获取异常订单操作－－-关闭订单
+    * fetchCloseOrder({ payload }) {
+      const { orderId, closedType, closedNote, operatorId } = payload;
+      const response = yield call(fetchCloseOrder, orderId, closedType, closedNote, operatorId);
+      const payloadData = { closeOrder: response.data };
+      yield put({ type: 'reducerCloseOrder', payloadData });
+    },
   },
 
   reducers: {
@@ -186,19 +169,24 @@ module.exports = {
       return { ...state, totalOrderStatistics };
     },
 
+    //获取商家订单状态
+    reducerSellerOrderStatistics(state, { payload: sellerOrderStatistics }) {
+      return { ...state, sellerOrderStatistics };
+    },
+
     //商家订单列表
-    reducerSellerOrderList(state, { payload: sellerOrderList }) {
-      return { ...state, sellerOrderList };
+    reducerSellerOrderList(state, payload) {
+      return { ...state, sellerOrderList: payload.payloadData.sellerOrderList, sellerMeta: payload.payloadData.sellerMeta };
     },
 
     //区域订单列表
-    reducerAreaOrderList(state, { payload: areaOrderList }) {
-      return { ...state, areaOrderList };
+    reducerAreaOrderList(state, payload) {
+      return { ...state, areaOrderList: payload.payloadData.areaOrderList, areaMeta: payload.payloadData.areaMeta };
     },
 
     //异常订单列表
-    reducerCloseOrderList(state, { payload: closeOrderList }) {
-      return { ...state, closeOrderList };
+    reducerCloseOrderList(state, payload) {
+      return { ...state, closeOrderList: payload.payloadData.closeOrderList, closeMeta: payload.payloadData.closeMeta };
     },
 
     //异常订单详情
@@ -207,9 +195,18 @@ module.exports = {
     },
 
     //异常订单日志
-    reducerCloseOrderLog(state, { payload: closeOrderLog }) {
-      return { ...state, closeOrderLog };
+    reducerCloseOrderLog(state, payload) {
+      return { ...state, closeOrderLog: payload.payloadData.closeOrderLog, detailMeta: payload.payloadData.detailMeta };
     },
 
+    //异常订单操作－－－重新分单
+    reducerCloseOrderRedivides(state, payload) {
+      return { ...state, redivideOder: payload.payloadData.redivideOder };
+    },
+
+    //异常订单操作－－－关闭异订单
+    reducerCloseOrder(state, payload) {
+      return { ...state, closeOrder: payload.payloadData.closeOrder };
+    },
   },
 };

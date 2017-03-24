@@ -11,18 +11,32 @@ import SupList from './supplierList';
 import Search from './search';
 class Supplier extends Component {
   constructor(props) {
-    super(props)
-    this.state = props;
+    super()
+    this.state = {
+      VendorSupplierList:[],
+    };
   }
 
+  componentWillReceiveProps = (nextProps) => {
+    const { VendorSupplierList } = nextProps.supplierModel;
+    this.setState({
+      VendorSupplierList: VendorSupplierList,
+    })
+  };
+
   // 保存供应商Id
-  saveIds = (biz_info_id, supply_vendor_id) => {
+  saveIds = (biz_info_id, supply_vendor_id, city_code) => {
     sessionStorage.setItem('biz_info_id', biz_info_id);
     sessionStorage.setItem('supply_vendor_id', supply_vendor_id);
     const { dispatch } = this.props;
     dispatch({
       type: 'saveIdR',
       payload: { biz_info_id },
+    });
+
+    dispatch({
+      type: 'changeCityCodeR',
+      payload: { city_code },
     })
   };
 
@@ -43,13 +57,14 @@ class Supplier extends Component {
 
   // 提交添加供应商信息
   addSubmit = (values) => {
-    const { dispatch } = this.props;
+    const { dispatch, supplierModel } = this.props;
     const _accountInfo = window.getStorageItem('accountInfo') || '{}';
     const { vendor_id } = JSON.parse(_accountInfo);
+    const { city_code } = supplierModel;
     values.vendor_id = vendor_id;
     dispatch({
       type: 'addSupplierE',
-      payload: { values },
+      payload: { values, city_code },
     })
   };
 
@@ -86,12 +101,19 @@ class Supplier extends Component {
   render() {
     let { supplierModel, dispatch }=this.props;
     let { city_code, visible, supplierList, VendorSupplierList, serviceCityList }=supplierModel;
-    let searchProps = {
+    const searchProps = {
       city_code,
       visible,
       dispatch,
       supplierList,
       VendorSupplierList,
+      serviceCityList,
+    };
+    const suplistProps = {
+      city_code,
+      visible,
+      dispatch,
+      supplierList,
       serviceCityList,
     };
     return (
@@ -103,14 +125,14 @@ class Supplier extends Component {
           />
         </div>
         <div className="bd-content">
-          <SupList {...searchProps} saveId={this.saveIds}/>
+          <SupList {...suplistProps} saveId={this.saveIds}/>
         </div>
       </div>
     )
   }
 }
 
-function mapStateToProps({ business_public, supplierModel }) {
-  return { business_public, supplierModel }
+function mapStateToProps({ supplierModel }) {
+  return { supplierModel }
 }
 module.exports = connect(mapStateToProps)(Supplier);

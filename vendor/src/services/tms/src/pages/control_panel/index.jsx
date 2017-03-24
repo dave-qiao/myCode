@@ -15,18 +15,21 @@ class View extends Component {
     this.dispatch = props.dispatch;
     // 从全局变量中获取相关的信息
     let [accountInfo, userInfo, vendorInfo] = [window.currentAppAccountInfo, window.currentAppUserInfo,window.currentAppVendorInfo];
+    const { tms_control_panel } = props
     this.userInfo = userInfo; //服务商基本信息
     this.accountInfo = accountInfo;//账号信息
     const {vendor_id, account_id} = accountInfo;
-    const {city_code} = userInfo;
-    const {city_name} = vendorInfo;
-    this.city_name = city_name;
+    const city_code = '';
+    const city_name = '';
     this.account_id = account_id;//账号ID
 // 设置内部state
     this.state = {
       selectedRowKeys: [],//行选择符
       curr_courier: {},//当前的骑士
-      courier_id:''//骑士的ID
+      courier_id:'',//骑士的ID
+      org_order_id: '',//订单号
+      orderState: '', // 指派以及改派的状态
+      selectState: '1' //当前选中的订单状态,默认选择显示已接单的状态
     };
     // 初始化的开关在componentWillReceiveProps用到
     this.initQuery = true;
@@ -36,7 +39,7 @@ class View extends Component {
     this.querys = {
       shipments: {
         state: '1',
-        city_code, vendor_id,
+        city_code, vendor_id, 
       },
       couriers: {
         state: '100',
@@ -52,14 +55,18 @@ class View extends Component {
     //只做初始化
     if( this.initQuery ) {
       //获取morn的区域ID
-      const {default_area_id} = props.tms_control_panel;
+      const {default_area_id, default_city_code} = props.tms_control_panel;
       if(default_area_id) {
         this.updateArea_id(default_area_id);
         this.initQuery = false;
       };
+      if (default_city_code) {
+        this.updateCityCode(default_city_code);
+      }
     };
   }
-// 更新区域ID
+
+  // 更新区域ID
   updateArea_id = (area_id) => {
     let querys = this.querys;
     /*['shipments','couriers','stats'].forEach(item => { querys[item].area_id = area_id });*/
@@ -67,8 +74,16 @@ class View extends Component {
     ['shipments', 'stats'].forEach(item => { querys[item].area_id = area_id }); // Created by dave 17/1/19
   }
 
-  componentDidMount = () => {
+  // 更新城市code
+  updateCityCode = (city_code) => {
+    let querys = this.querys;
+    /*['shipments','couriers','stats'].forEach(item => { querys[item].area_id = area_id });*/
+    //从列表中移除 'couriers' 的区域请求参数，如果骑士列表需要筛选区域，则需要重新添加该参数
+    ['shipments', 'stats'].forEach(item => { querys[item].city_code = city_code }); // Created by dave 17/1/19
+  }
 
+
+  componentDidMount = () => {
   }
 // 查询函数
   handleSearch = (values) => {
@@ -86,8 +101,11 @@ class View extends Component {
       delete shipments.courier_id;
     };
     this.state.courier_id = shipments.courier_id
+    this.state.org_order_id = shipments.org_order_id
     this.shipmentsStatsQuery();
     shipments.is_master = false;
+    //返回时记录区域
+    const areaInfo = window.sessionStorage && JSON.parse(sessionStorage.getItem('AREAINFO'))
     // 触发action
     this.dispatch({type: CONTROL_PANEL.shipments.query, payload: {...shipments,page}});
   }
@@ -103,6 +121,11 @@ class View extends Component {
     }else{
       delete  params.courier_id;
     }
+    if (this.state.org_order_id) {
+      params.org_order_id = this.state.org_order_id;
+    } else {
+      delete  params.org_order_id;
+    }
     this.dispatch({type: CONTROL_PANEL.shipments.stats, payload: this.querys.stats});
   }
 
@@ -111,10 +134,27 @@ class View extends Component {
     this.shipmentsQuery();
     this.couriersQuery();
     this.shipmentsStatsQuery();
+    //刷新回到第一页
+    const firstPage = document.getElementsByClassName('ant-pagination-item-1')[0];
+    firstPage && firstPage.click()
+  }
+  cityChange = (city_code) => {
+    //更新城市查询code
+    this.updateCityCode(city_code)
+    //请求区域列表
+    this.dispatch({type: CONTROL_PANEL.areaList, payload: this.querys.stats });
+
+    const sourceClass = document.getElementsByClassName('ant-select-selection-selected-value');
+    
+    //重置区域选项框，因此处没用到form表单自带的限制条件
+    if (sourceClass[1] && sourceClass[1].innerHTML !== '在岗') {
+      //更新区域id为空
+      this.updateArea_id('');
+      sourceClass[1].innerHTML = ['请选择区域']
+    }
   }
   //更新各个查询的area_id
   areaChange = (area_id) => {
-    console.log(area_id,'area_idarea_idarea_idarea_id------2')
     this.updateArea_id(area_id);
     this.shipmentsQuery();
     this.couriersQuery();
@@ -122,9 +162,15 @@ class View extends Component {
   }
   //切换订单状态(shipments,state)或者在职状态(couriers,state)  END
   stateChange = (type, value) => {
+    //切换回到第一页
+    this.page = 1;
+
     this.querys[type].state = value;
     if(type === 'shipments') {
       this.shipmentsQuery();
+      this.setState({
+        selectState: value
+      })
     } else {
       this.couriersQuery();
     };
@@ -164,13 +210,24 @@ class View extends Component {
     this.page = page;
     this.shipmentsQuery();
   }
+
+  // 保存订单状态
+  saveOrderState = (state) =>{
+    // console.log(state,'state');
+    this.setState({
+      orderState: state,
+    })
+  };
+
   render() {
     // 从props里面获取信息
     const {tms_control_panel, dispatch, business_public} = this.props;
     const default_couriers = business_public.couriers || [];
-    const {areas, default_area_id, default_area_name, couriers, shipments, visible, shipments_stats } = tms_control_panel;
-    const { onPageChange, page, city_name, Allrefresh, handleSearch,  areaChange,  stateChange,  showModal,  handleSelect,  onCancel, onOk, userInfo} = this;
-    const {selectedRowKeys, curr_courier} = this.state;
+    const {default_city_code, default_city_name, areas, default_area_id, default_area_name, couriers, shipments, visible, shipments_stats, serviceCityList } = tms_control_panel;
+    const { onPageChange, page, updateArea_id, updateCityCode, Allrefresh, handleSearch, cityChange,  areaChange,  stateChange,  showModal,  handleSelect,  onCancel, onOk, userInfo, saveOrderState} = this;
+    const {selectedRowKeys, selectState, curr_courier} = this.state;
+    //初始化时更新城市code
+    updateCityCode(default_city_code)
     //行的长度
     const selectedLen = selectedRowKeys.length;
     let areas_data = areas.data|| [];
@@ -181,9 +238,15 @@ class View extends Component {
       Allrefresh,//刷新函数
       default_area_id,//默认的区域ID
       default_area_name,//默认的区域名字
-      city_name,//城市名字
+      default_city_code,//默认城市code
+      default_city_name,//默认城市名
+      serviceCityList, //城市列表
+      default_city_name,//城市名字
       areaChange,//切换区域的函数
-      handleSearch//头部的搜索函数
+      cityChange,//切换城市的函数
+      handleSearch,//头部的搜索函数
+      updateArea_id,//更新区域ID
+      updateCityCode,//更新城市code
     };
     // 左侧骑士组件的参数
     const couriersProps = {
@@ -200,8 +263,10 @@ class View extends Component {
       onPageChange,
       shipments_stats,//运单的状态
       selectedRowKeys,
+      selectState,  //当前选中的运单状态，方便超时规则设置
       stateChange,
-      handleSelect
+      handleSelect,
+      saveOrderState,
     };
     // 关于改派的参数
     const reassignProps = {

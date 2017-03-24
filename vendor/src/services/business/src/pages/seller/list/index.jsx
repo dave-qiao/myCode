@@ -57,12 +57,13 @@ class View extends Component {
     // 从props里面获取信息
     const { business_seller, business_public } = this.props;
     // 从model获取details信息
-    const { list_searchs, list_tables } = business_seller;
+    const { list_searchs, list_tables, serviceCityList } = business_seller;
     // 从this里面获取信息
     const { page, onSearch, onPageChange } = this;
    // 搜索组件的参数 要通过props传递到子组件中
     const searchProps = {
       onSearch,
+      serviceCityList,  //城市列表
       areas: business_public.areas, //从公共model中获取到区域列表
     };
     // 列表组件的参数 要通过props传递到子组件中

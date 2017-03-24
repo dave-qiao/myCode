@@ -13,9 +13,21 @@ class Search extends Component {
   constructor() {
     super()
     this.state = {
-      visible: false
+      visible: false,
+      city_code: '',
     }
   }
+
+  componentWillReceiveProps = (nextProps) => {
+    const { city_code } = nextProps;
+    this.setState({
+      city_code: city_code,
+    })
+  };
+
+  /*componentWillMount = () => {
+    this.props.areaSearch();
+  };*/
 
   showModal = ()=> {
     this.setState({
@@ -75,6 +87,7 @@ class Search extends Component {
 
   // 根据不同的城市选出不同的区域
   addAreaCityChange = (value) => {
+    /*this.props.onChange(value);*/
     this.props.addAreaCityChange(value);
     const { form } = this.props;
     form.resetFields();
@@ -84,8 +97,8 @@ class Search extends Component {
     const _accountInfo = window.getStorageItem('accountInfo') || '{}';
     const userInfo = window.getStorageItem('userInfo') || '{}';
     const { vendor_id } = JSON.parse(_accountInfo);
-    const { city_code } = JSON.parse(userInfo);
     let type = this.props.type;
+    const city_code = this.state.city_code;
     if (type == 'regional') {
       const city = city;
     } else {

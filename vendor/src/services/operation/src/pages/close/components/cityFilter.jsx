@@ -15,17 +15,15 @@ class CityComponent extends Component {
     this.private = {
       onChangeCity: props.onChangeCity, //选择城市的事件回调
     };
-
-    console.log('分单中心，城市选择器', this.state.cityCode);
   }
 
-  componentWillReceiveProps = (nextProps) => {
+  /*componentWillReceiveProps = (nextProps) => {
     //初始化新数据
     this.setState({
       cityCode: nextProps.cityCode,        //当前城市code
       cityList: nextProps.cityList,        //当前城市列表
     });
-  };
+  };*/
 
   onChangeCity = (cityCode) => {
     const { cityList } = this.state;
@@ -35,7 +33,6 @@ class CityComponent extends Component {
         cityName = value.city_name;
       }
     });
-
     this.private.onChangeCity(cityCode, cityName);
   };
 

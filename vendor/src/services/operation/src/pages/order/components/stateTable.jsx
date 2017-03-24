@@ -1,148 +1,164 @@
 
 import React from 'react';
 import { Link } from 'dva/router';
-import { Table, Badge } from 'antd';
+import { Table, Badge, Pagination } from 'antd';
 
 import style from './style.less';
+import { OrderListState, OrderParams } from '../../exports'
 
-const orderWord = {
-  total: 8888,          //总订单
-  undone: 25,           //未完成 ＊
-  done: 100,            //已完成 ＊
-  unDistribution: 10,   //待分配 ＊
-  distribution: 50,     //分配中 ＊
-  exception: -50,       //异常   ＊
-  canceled: -100,       //已取消 ＊
-  completeRate: 0.88,    //成功率
-
-  //使用初始化
-  description(rawValue) {
-    switch (rawValue) {
-      case this.total:
-        return 'total';  //草稿状态，默认前端展示为禁用
-      case this.undone:
-        return 'undone';
-      case this.done:
-        return 'done';
-      case this.unDistribution:
-        return 'unDistribution';
-      case this.distribution:
-        return 'distribution';
-      case this.exception:
-        return 'exception';
-      case this.canceled:
-        return 'canceled';
-      case this.completeRate:
-        return 'completeRate';
-      default:
-        return 'other';
-    }
-  },
-};
 //优化代码－－－
 function getSource(styleName, key, name) {
   return {
     title: <span><Badge className={style.minCircle_1} />name</span>,
     dataIndex: 'states',
     key: 'key',
-    render: (states, row, index) => { return states[orderWord.key] || 0 },
+    render: (states, row, index) => { return states[OrderListState.key] || 0 },
   }
-};
+}
 
-const columns = [{
-  title: '项目',
-  dataIndex: 'seller_name',
-  key: 'sellerName',
-  render: (text, record) => (
-    <span>
-      <Link to={`/operation/order/seller/?sellerId=${record.seller_id}`}>{ record.seller_name }</Link>
-    </span>
-  ),
-}, {
-  title: '总订单',
-  dataIndex: 'order_count',
-  key: 'total',
-}, {
-  //getSource(style.minCircle_1, unDistribution, 待分配);
-  title: <span><Badge className={style.minCircle_1} />待分配</span>,
-  dataIndex: 'states',
-  key: 'unDistribution',
-  render: (states, row, index) => { return states[orderWord.unDistribution] || 0 },
-}, {
-  title: <span><Badge className={style.minCircle_2} />已确认</span>,
-  dataIndex: 'states',
-  key: 'confirmed',
-  render: (states, row, index) => { return states[orderWord.confirmed] || 0 },
-}, {
-  title: <span><Badge className={style.minCircle_3} />异常</span>,
-  dataIndex: 'states',
-  key: 'exception',
-  render: (states, row, index) => { return states[orderWord.exception] || 0 },
-}, {
-  title: <span><Badge className={style.minCircle_4} />配送中</span>,
-  dataIndex: 'states',
-  key: 'shipping',
-  render: (states, row, index) => { return states[orderWord.shipping] || 0 },
-}, {
-  title: <span><Badge className={style.minCircle_5} />未完成</span>,
-  dataIndex: 'states',
-  key: 'undone',
-  render: (states, row, index) => { return states[orderWord.undone] || 0 },
-}, {
-  title: <span><Badge className={style.minCircle_6} />已送达</span>,
-  dataIndex: 'states',
-  key: 'done',
-  render: (states, row, index) => { return states[orderWord.done] || 0 },
-}, {
-  title: <span><Badge className={style.minCircle_7} />已取消</span>,
-  dataIndex: 'states',
-  key: 'canceled',
-  render: (states, row, index) => { return states[orderWord.canceled] || 0 },
-}, {
-  title: '完成率',
-  dataIndex: 'states',
-  key: 'completeRate',
-  render: (text, record, index) => {
-    //TODO:
-    const totalNum = record.order_count;
-    const rate = totalNum != 0 ? text[orderWord.done] / totalNum : 0;
-    let completeRate = rate * 100;
-    completeRate = completeRate.toFixed(2).toString();
-    /*completeRate = completeRate && (completeRate.slice(2, 4) + '.' + completeRate.slice(4, 6));*/
-    return (completeRate && (completeRate + '%')) || (0 + '%');
-  },
-}, {
-  title: '操作',
-  key: 'operation',
-  render: (text, record) => (
-    <span>
-      <a href="/#/operation/order/close">分单规则调整</a>
-    </span>
-  ),
-}];
+const { rgReg, requestPagerSize, requestPageNumber } = OrderParams;
 
 class StateTable extends React.Component {
   constructor(props) {
     super();
-
-    //初始化商家列表
+    //初始化商家列表－状态
     this.state = {
       sellerOrderList: props.sellerOrderList,
+      sellerMeta: props.sellerMeta,
+      date: props.date,
+      current: props.current,
+      cityCode: props.cityCode,
     };
+    //初始化商家列表－方法
+    this.private = {
+      onPageChange: props.onPageChange,
+    }
   }
 
   componentWillReceiveProps = (nextProps) => {
     //update 商家列表
     this.setState({
       sellerOrderList: nextProps.sellerOrderList,
+      sellerMeta: nextProps.sellerMeta,
+      date: nextProps.date,
+      current: nextProps.current,
+      cityCode: nextProps.cityCode,
     });
   };
 
-  render() {
-    const { sellerOrderList } = this.state;
+  //update 页码
+  onPageChange = (page) => {     //当前页
+    this.setState({ current: page });
+    this.private.onPageChange(page);
+  };
 
+  //保存商户ID 商户名 签约ID
+  saveId = (record) => {
+    sessionStorage.setItem('sellerId',record.seller_id);
+    sessionStorage.setItem('sellerName',record.seller_name);
+    sessionStorage.setItem('contractId',record.contract_id);
+  };
+
+  render() {
+    const { sellerOrderList, sellerMeta, date, current, cityCode } = this.state;
+    const { onPageChange } = this;
+
+    const columns = [{
+      title: '项目',
+      dataIndex: 'seller_name',
+      key: 'sellerName',
+      render: (text, record) => (
+        <span> <Link to={`/operation/order/seller/?sellerId=${record.seller_id}&date=${date}&sellerName=${record.seller_name}&cityCode=${cityCode}`}>{ record.seller_name }</Link> </span>
+      ),
+    }, {
+      title: '总订单',
+      dataIndex: 'order_count',
+      key: 'total',
+    },
+//  {
+//   //getSource(style.minCircle_1, unDistribution, 待分配);
+//   title: <span><Badge className={style.minCircle_1} />待分配</span>,
+//   dataIndex: 'states',
+//   key: 'unDistribution',
+//   render: (states, row, index) => { return states[OrderListState.unDistribution] || 0 },
+// },
+    {
+      title: <span><Badge className={style.minCircle_2} />已确认</span>,
+      dataIndex: 'states',
+      key: 'confirmed',
+      render: (states, row, index) => { return states[OrderListState.confirmed] || 0 },
+    }, {
+      title: <span><Badge className={style.minCircle_3} />异常</span>,
+      dataIndex: 'states',
+      key: 'exception',
+      render: (states, row, index) => { return states[OrderListState.exception] || 0 },
+    }, {
+      title: <span><Badge className={style.minCircle_4} />配送中</span>,
+      dataIndex: 'states',
+      key: 'distribution',
+      render: (states, row, index) => { return states[OrderListState.distribution] || 0 },
+    }, {
+      title: <span><Badge className={style.minCircle_5} />未完成</span>,
+      dataIndex: 'states',
+      key: 'undone',
+      render: (states, row, index) => {
+        //已确认订单数
+        const confirmedNumber = states[OrderListState.confirmed] ? states[OrderListState.confirmed] : 0;
+        //配送中订单数
+        const distributionNumber = states[OrderListState.distribution] ? states[OrderListState.distribution] : 0;
+        //异常订单数
+        const exceptionNumber = states[OrderListState.exception] ? states[OrderListState.exception] : 0;
+        //未完成订单数
+        return (confirmedNumber + distributionNumber + exceptionNumber);
+      },
+    }, {
+      title: <span><Badge className={style.minCircle_6} />已送达</span>,
+      dataIndex: 'states',
+      key: 'done',
+      render: (states, row, index) => { return states[OrderListState.done] || 0 },
+    }, {
+      title: <span><Badge className={style.minCircle_7} />已取消</span>,
+      dataIndex: 'states',
+      key: 'canceled',
+      render: (states, row, index) => { return states[OrderListState.canceled] || 0 },
+    }, {
+      title: '完成率',
+      dataIndex: 'states',
+      key: 'completeRate',
+      render: (text, record, index) => {
+        //总数:   ＊＊总数为0
+        const totalNum = record.order_count ? record.order_count : 0;
+        //已完成: ＊＊完成数为0
+        const doneNum = text[OrderListState.done] ? text[OrderListState.done] : 0;
+        //完成率：＊＊总数为0
+        const rate = totalNum !== 0 ? doneNum / totalNum : 0;
+        let completeRate = rate * 100;
+        //取两位小数
+        completeRate = `${completeRate.toFixed(2).toString()}%`;
+        return completeRate && completeRate;
+      },
+    }, {
+      title: '操作',
+      key: 'operation',
+      render: (text, record) => {
+        return <Link to={`/business/manage/retail/orderDispatchRules?id=${record.seller_id}`} onClick={this.saveId.bind(this, record)} >分单规则调整</Link> 
+      },
+    }];
+    const totalNum = sellerMeta && sellerMeta.result_count > 0 ? sellerMeta.result_count : 0;
+    const pagination = {
+      total: totalNum,
+      current,
+      pageSize: requestPagerSize,
+      onChange: onPageChange,
+    };
+    const paginationShow = totalNum > 0 ? <Pagination className="ant-table-pagination" {...pagination} showTotal={total1 => `共 ${totalNum} 条`} /> : '';
     return (
-      <Table dataSource={sellerOrderList} columns={columns} />
+      <div>
+        <Table dataSource={sellerOrderList} columns={columns} pagination={false} />
+        {
+          paginationShow
+        }
+      </div>
     );
   }
 }

@@ -2,9 +2,10 @@ import request from '../../../aoao-core-api-service/src/utils/request';
 import qs from 'qs';
 
 
-export async function areas_total_list(vendorId) {
+export async function areas_total_list(param) {
   const params = {
-    vendor_id:vendorId,
+    vendor_id: param.vendor_id,
+    city_code: param.city_code
   };
   return request(`areas/total_list?${qs.stringify(params)}`)
           .then((data) => {

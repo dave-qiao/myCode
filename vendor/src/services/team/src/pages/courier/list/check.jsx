@@ -48,7 +48,7 @@ class View extends Component {
     const initTeamList = this.state.initTeamList;
     const id_card_sn = this.state.id_card_sn;
     const teams_info = this.state.teams_info;
-    const { business_courier, business_publics, dispatch } = this.props;
+    const { business_courier, dispatch } = this.props;
     const { list_details } = business_courier;
     const { account_detail = {}, courier_detail = {}, courier_audit_logs = {} } = list_details;
     const { visible } = this.state;
@@ -192,8 +192,8 @@ class View extends Component {
 
 }
 
-function mapStateToProps({ business_courier, business_publics }) {
-  return { business_courier, business_publics };
+function mapStateToProps({ business_courier }) {
+  return { business_courier };
 };
 
 module.exports = connect(mapStateToProps)(View);

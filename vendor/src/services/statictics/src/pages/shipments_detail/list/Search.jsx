@@ -30,12 +30,16 @@ const [FormItem,Option, RangePicker] = [Form.Item,Select.Option , DatePicker.Ran
 // ];
 const Search = Form.create()((props) => {
 
-  const { getFieldProps, getFieldsValue } = props.form;
-  const {onSearch,areas={data:[]},sellers=[],couriers=[]} = props;
+  const { getFieldProps, getFieldsValue, setFieldsValue, resetFields } = props.form;
+  const {onSearch,sellerTypeCB,areas={data:[]},sellers=[],couriers=[]} = props;
   function handleSubmit(e) {
     e.preventDefault();
     onSearch(getFieldsValue())
   };
+  function handleSelect() {
+    //重置商家
+    resetFields(['seller_id'])
+  }
   const content1 = (
      <div>
       <p> 1.结算方式：为配送费结算方式； </p>
@@ -43,7 +47,6 @@ const Search = Form.create()((props) => {
     </div>
   );
   const itemLayout = {"labelCol":{"span":4},"wrapperCol":{"span":14}};
-
   return (
     <Form horizontal className="ant-advanced-search-form" onSubmit={handleSubmit}>
           <Row gutter={24}>
@@ -58,9 +61,47 @@ const Search = Form.create()((props) => {
                             }
                           </Select>
                         </FormItem>
-                        <FormItem label="联系电话" {...itemLayout} >
-                          <Input {...getFieldProps("consignee_mobile")} {...{"placeholder":"请输入顾客电话"}}/>
+                        <FormItem label="商家类型"  {...itemLayout}  >
+                          <Select className="seller_type" showSearch  optionFilterProp="children"  placeholder= "请选择商家类型" onChange={ sellerTypeCB } onSelect={ handleSelect }>
+                            <Option value=''>全部</Option>
+                            <Option key="delivery_state_1" value="10">直营商家</Option>
+                            <Option key="delivery_state_2" value="20">加盟商家</Option>
+                          </Select>
                         </FormItem>
+                        <FormItem label="配送状态" {...itemLayout} >
+                          <Select showSearch  optionFilterProp="children" placeholder= "请选择运单配送状态"  {...getFieldProps("delivery_state", { initialValue: "" })}>
+                            <Option key="delivery_state_0" value="">全部</Option>
+                            <Option key="delivery_state_1" value="5">已创建</Option>
+                            <Option key="delivery_state_2" value="10">待分配</Option>
+                            <Option key="delivery_state_3" value="15">已分配</Option>
+                            <Option key="delivery_state_4" value="20">已接单</Option>
+                            <Option key="delivery_state_5" value="22">已到店</Option>
+                            <Option key="delivery_state_6" value="24">已取货</Option>
+                            <Option key="delivery_state_8" value="-50">异常</Option>
+                            <Option key="delivery_state_9" value="100">已送达</Option>
+                            <Option key="delivery_state_10" value="-100">已取消</Option>
+                          </Select>
+                        </FormItem>
+                      </Col>
+                      <Col sm={8}>
+                        <FormItem label="订单编号"  {...itemLayout} >
+                          <Input {...getFieldProps("org_order_id")} {...{"placeholder":"请输入订单编号"}}/>
+                        </FormItem>
+                        {
+                          sellers.length > 0 ? <FormItem label="商家"  {...itemLayout}  >
+                                        <Select showSearch  optionFilterProp="children"   placeholder= "请选择商家"  {...getFieldProps('seller_id')} >
+                                          {
+                                            sellers.map((item,index) =>{
+                                              return <Option key={'seller' + index + item.id} value={item.id}>{item.name}</Option>
+                                            })
+                                          }
+                                        </Select>
+                                      </FormItem> : <FormItem label="商家"  {...itemLayout}  >
+                                                      <Select showSearch  optionFilterProp="children"   placeholder= "请选择商家"  {...getFieldProps('seller_id')} >
+                                                        <Option value=''>全部</Option>
+                                                      </Select>
+                                                    </FormItem>
+                        }
                         <FormItem label="日期" style={{marginTop:'10px'}} {...itemLayout}>
                           <RangePicker {...getFieldProps("date_range",{getValueFromEvent:(date, dateString) => dateString})} />
                         </FormItem>
@@ -76,26 +117,13 @@ const Search = Form.create()((props) => {
                             }
                           </Select>
                         </FormItem>
-                        <FormItem label="订单编号"  {...itemLayout} >
-                          <Input {...getFieldProps("org_order_id")} {...{"placeholder":"请输入订单编号"}}/>
+                        <FormItem label="联系电话" {...itemLayout} >
+                          <Input {...getFieldProps("consignee_mobile")} {...{"placeholder":"请输入顾客电话"}}/>
                         </FormItem>
                         <FormItem label=""  {...itemLayout} >
                           <Button type="primary" htmlType="submit" style={{ marginRight: 20, marginLeft: 20 }}>查询</Button>
                         </FormItem>
 
-                      </Col>
-                      <Col sm={8}>
-                        <FormItem label="商家"  {...itemLayout}  >
-                          <Select showSearch  optionFilterProp="children"   placeholder= "请选择商家"  {...getFieldProps('seller_id')} >
-                            <Option value=''>全部</Option>
-                            {
-                              sellers.map((item,index) =>{
-                                const seller = item.seller || {};
-                                return <Option key={'seller' + index + item.seller_id} value={item.seller_id}>{seller.name}</Option>
-                              })
-                            }
-                          </Select>
-                        </FormItem>
                         {/* <FormItem label="运单状态"   {...itemLayout} >
                           <Select showSearch  optionFilterProp="children" placeholder= "请选择运单状态"  {...getFieldProps("state", { initialValue: "" })}>
                             <Option key="state_00" value="">全部</Option>
@@ -108,20 +136,7 @@ const Search = Form.create()((props) => {
                             <Option key="state_7" value="-50">异常</Option>
                           </Select>
                         </FormItem> */}
-                        <FormItem label="配送状态"   {...itemLayout} >
-                          <Select showSearch  optionFilterProp="children" placeholder= "请选择运单配送状态"  {...getFieldProps("delivery_state", { initialValue: "" })}>
-                            <Option key="delivery_state_0" value="">全部</Option>
-                            <Option key="delivery_state_1" value="5">已创建</Option>
-                            <Option key="delivery_state_2" value="10">待分配</Option>
-                            <Option key="delivery_state_3" value="15">已分配</Option>
-                            <Option key="delivery_state_4" value="20">已接单</Option>
-                            <Option key="delivery_state_5" value="22">已到店</Option>
-                            <Option key="delivery_state_6" value="24">已取货</Option>
-                            <Option key="delivery_state_8" value="-50">异常</Option>
-                            <Option key="delivery_state_9" value="100">已送达</Option>
-                            <Option key="delivery_state_10" value="-100">已取消</Option>
-                          </Select>
-                        </FormItem>
+                        
                       </Col>
             </Row>
       <p style={{textAlign: 'right', position: 'relative', height: '0'}}>

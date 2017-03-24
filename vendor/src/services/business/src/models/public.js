@@ -84,6 +84,7 @@ module.exports =   {
       const last_page = Math.ceil(data._meta.result_count/500);
       let [result_arr,page] = [data.data,2];
       // 循环请求获取所有的区域
+      const payload = params.payload;
       while (page <= last_page) {
         payload.page = page;
         let result_other = yield call(area_find_500, payload);
@@ -108,6 +109,7 @@ module.exports =   {
       const last_page = Math.ceil(data._meta.result_count/500);
       let [result_arr,page] = [data.data,2];
       // 循环请求所有的骑士
+      const payload = params.payload;
       while (page <= last_page) {
         payload.page = page;
         let result_other = yield call(courier_find_500, payload);
@@ -131,6 +133,7 @@ module.exports =   {
       const last_page = Math.ceil(data._meta.result_count/500);
       let [result_arr,page, checkArr] = [data.data,2, []];
       // 循环获取该服务商的签约商家
+      const payload = params.payload;
       while (page <= last_page) {
         payload.page = page;
         let result_other = yield call(seller_find_500, payload);

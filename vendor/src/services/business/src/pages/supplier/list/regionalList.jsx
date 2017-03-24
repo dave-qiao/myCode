@@ -134,7 +134,7 @@ class RegionalList extends Component {
 
   render() {
     const { supplierModel, dispatch } = this.props;
-    const { biz_info_id, areaList, addAreaList, supplierDetail, serviceCityList } = supplierModel;
+    const { biz_info_id, areaList, addAreaList, supplierDetail, serviceCityList, city_code  } = supplierModel;
     let propsData = {
       biz_info_id,
       areaList,
@@ -142,6 +142,7 @@ class RegionalList extends Component {
       addAreaList,
       supplierDetail,
       serviceCityList,
+      city_code,
     };
     return (
       <div className="con-body main-list">

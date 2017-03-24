@@ -2,13 +2,14 @@
 import React, { Component, PropTypes } from 'react';
 import { hashHistory, Link } from 'dva/router';
 import { Form, Button, Select, DatePicker } from 'antd';
-import style from './style.less';
 import CityFilter from './cityFilter';
+import { OrderParams } from './../../exports';
 
 const moment = require('moment');
 
 const RangePicker = DatePicker.RangePicker;
-const rgReg = /\-/g;
+
+const { rgReg, requestPagerSize, requestPageNumber } = OrderParams;
 
 //初始化变量
 const [FormItem, Option] = [Form.Item, Select.Option];
@@ -27,6 +28,7 @@ class FilterComponent extends Component {
     };
 
     this.private = {
+      onChangeDate: props.onChangeDate,       //处理日期回调
       onHandleSearch: props.onHandleSearch,   //处理搜索回调
     };
   }
@@ -53,12 +55,15 @@ class FilterComponent extends Component {
 
   //选择日期
   onChangeDate = (value, dateString) => {
+    let startDate;
+    let endDate;
     if (dateString) {
-      const startDate = dateString[0].replace(rgReg, '');
-      const endDate = dateString[1].replace(rgReg, '');
+      startDate = dateString[0].replace(rgReg, '');
+      endDate = dateString[1].replace(rgReg, '');
       window.localStorage.setItem('startDate', startDate);
       window.localStorage.setItem('endDate', endDate);
     }
+    this.private.onChangeDate(startDate, endDate);
   };
 
   //搜索
@@ -88,7 +93,7 @@ class FilterComponent extends Component {
     const { onChangeDate } = this;
     const today = moment().format().replace(rgReg, '').substring(0, 8);
     return (
-      <RangePicker style={{ width: 184 }} onChange={onChangeDate} defaultStartValue={today} />
+      <RangePicker defaultValue={[new Date(), new Date()]} style={{ width: 184 }} onChange={onChangeDate} />
     )
   };
 
@@ -97,15 +102,11 @@ class FilterComponent extends Component {
     const { renderCityComponent, renderDateComponent, onHandleSearch } = this;
     return (
       <Form inline onSubmit={this.handleSubmit}>
-        <FormItem
-          label="城市"
-        >
+        <FormItem label="城市">
           {/*城市列表   defaultValue={cityCode}  */}
           {renderCityComponent()}
         </FormItem>
-        <FormItem
-          label="日期"
-        >
+        <FormItem label="日期">
           {/*日期选择器 onClick={onHandleSearch} */}
           {renderDateComponent()}
         </FormItem>

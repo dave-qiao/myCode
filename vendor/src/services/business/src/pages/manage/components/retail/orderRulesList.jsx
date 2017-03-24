@@ -99,6 +99,11 @@ class OrderRulesList extends Component {
     }
   }
 
+  // 接受父级的数据
+  componentWillReceiveProps = (nextProps) => {
+    const a = [];
+  };
+
   //删除列表信息
   delete(record, index) {
     const { dispatch } = this.props;
@@ -208,7 +213,7 @@ class OrderRulesList extends Component {
 
     if (editOrderRule.supply_vendor_list.length > -1) {
       for (var i = 0; i < editOrderRule.supply_vendor_list.length; i++) {
-        supply_vendor_list_value.push(editOrderRule.supply_vendor_list[i].name);
+        supply_vendor_list_value.push(editOrderRule.supply_vendor_list[i].id);
       }
     }
 
@@ -228,47 +233,6 @@ class OrderRulesList extends Component {
               </Col>
               <Col sm={24}>
                 <FormItem label="适用区域:" {...{ "labelCol": { "span": 8 }, "wrapperCol": { "span": 9 } }}>
-                  {editOrderRule.sub_area_list.length < 0 ?
-                    <TreeSelect
-                      style={{ width: '100%' }}
-                      dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
-                      placeholder={sub_area_list_value}
-                      treeDefaultExpandAll
-                      treeCheckable
-                      {...getFieldProps("area_id", {
-                        validate: [
-                          {
-                            rules: [{
-                              required: true, message: '请选择服务区域', type: 'array',
-                              validator: (rule, value, callback) => {
-                                if (!value) {
-                                  callback('请选择服务区域');
-                                  return;
-                                }
-                                if (value.length == 0) {
-                                  callback('请选择服务区域');
-                                }
-                                callback();
-                              },
-                            },], trigger: 'onChange',
-
-                          }
-                        ]
-                      })}
-                    >
-                      <TreeNode value={editOrderRule.area_info.id} title={editOrderRule.area_info.name}
-                                key={editOrderRule.area_info.id}>
-                        {
-                        {
-                          /*editOrderRule.sub_area_list.map(function (item, index) {
-                           return (
-                           <TreeNode value={item.id} title={item.name} key={item.id}/>
-                           )
-                           })*/
-                        }
-                        }
-                      </TreeNode>
-                    </TreeSelect> :
                     <Select
                       showSearch
                       multiple
@@ -285,12 +249,11 @@ class OrderRulesList extends Component {
                       {
                         treeList.map(function (item, index) {
                           return (
-                            <Option value={item.id} key={item.id}>{item.name}</Option>
+                            <Option value={item.id} key={`area${item.id}${index}`}>{item.name}</Option>
                           )
                         })
                       }
                     </Select>
-                  }
                 </FormItem>
               </Col>
               <Col sm={24}>
@@ -308,20 +271,17 @@ class OrderRulesList extends Component {
                     style={{ width: '100%' }}
                     placeholder={'请选择服务商'}
                     optionFilterProp="children"
-                    defaultValue={supply_vendor_list_value}
                     {...getFieldProps("supply_vendor_id", {
                       validate: [
                         { rules: [{ required: true, message: '请选择服务商' },], trigger: 'onChange', },
                       ],
-                      initialValue: supply_vendor_list_value,
-
+                      initialValue: supply_vendor_list_value[0],
                     })}
                   >
-                    {/*<Option key='-1' value={serviceMessage.id}>{serviceMessage.name}</Option>*/}
                     {
                       serviceProvider.data.map(function (item, index) {
                         return (
-                          <Option key={index} value={item.id}>{item.name}</Option>
+                          <Option key={`${index}${item.id}`} value={item.id}>{item.name}</Option>
                         )
                       })
                     }

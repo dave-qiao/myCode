@@ -1,24 +1,13 @@
-const [gulp, concat, replace, clean, rename] = [
+const [gulp, concat, replace, clean, rename, _package] = [
   require('gulp'),
   require('gulp-concat'),
   require('gulp-replace'),
   require('gulp-clean'),
   require('gulp-rename'),
+  require('./package.json'),
 ];
-const _package = require('./package.json');
+
 const _dist = './dist/';
-
-const jr = require('gulp-json-replace');
-
-gulp.task('json-replace', () => {
-  //替换index中的环境变量
-  return gulp.src('./src/index.html')
-    .pipe(jr({
-      src: './.bin/release/config.json',
-      identify: '%%',
-    }))
-    .pipe(gulp.dest('dist/'));
-})
 
 gulp.task('copy_img', () => {
   //拷图片
@@ -35,7 +24,7 @@ gulp.task('version_chunk', () => {
   .pipe(gulp.dest('./dist/'));
 
   //改版文件
-  gulp.src([`${_dist}common.js`, `${_dist}index.css`, `${_dist}index.js`, `${_dist}vendor.js`])
+  gulp.src([`${_dist}common.js`, `${_dist}config.js`, `${_dist}index.css`, `${_dist}index.js`, `${_dist}vendor.js`])
   .pipe(rename({
     dirname: '',
     suffix: `.${_package.version}`,
@@ -50,6 +39,6 @@ gulp.task('version_chunk', () => {
 
 gulp.task('clean-scripts', () => {
   //清除chunk文件
-  gulp.src([`${_dist}common.js`, `${_dist}index.css`, `${_dist}index.js`, `${_dist}vendor.js`, `${_dist}*.aoao-chunk.js`], { read: false })
+  gulp.src([`${_dist}common.js`, `${_dist}config.js`, `${_dist}index.css`, `${_dist}index.js`, `${_dist}vendor.js`, `${_dist}*.aoao-chunk.js`], { read: false })
   .pipe(clean());
 });

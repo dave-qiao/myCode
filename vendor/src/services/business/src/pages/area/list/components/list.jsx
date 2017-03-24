@@ -145,6 +145,12 @@ class listComponent extends Component {
       width: '60%',
       render: (text, row, index) => {
         if (text !== '添加子区域') {
+          //判断是否是子区域
+          if (row.children) {
+            //计算子区域数量（判断是否显示添加按钮，如果显示按钮，数量要减一）
+            const subAreaCount = isShowCreate ? row.children.length - 1 : row.children.length;
+            return (subAreaCount === 0) ? text : `${text} (${subAreaCount})`;
+          }
           return text;
         }
 
@@ -153,7 +159,7 @@ class listComponent extends Component {
         if (isShowCreate === true) {
           children = (
             <EditComponent onOk={createSubAreaWithValue} cityCode={cityCode} cityName={cityName} parentName={row.parentName} parentId={row.parentId} type="subArea">
-              <a> <Icon type="plus" style={{fontWeight: 'bold' }}/> &nbsp;&nbsp; 添加子区域 </a>
+              <a> <Icon type="plus" style={{ fontWeight: 'bold' }} /> &nbsp;&nbsp; 添加子区域 </a>
             </EditComponent>
             );
         }
@@ -218,7 +224,7 @@ class listComponent extends Component {
       <div>
         {renderTitleComponent(false)}
         {renderAreaVendorSelectComponent()}
-        {renderAreaTableComponent(processList, relateType)}
+        {renderAreaTableComponent(processList, relateType, false)}
       </div>
     );
   }

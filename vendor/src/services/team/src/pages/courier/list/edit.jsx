@@ -19,8 +19,9 @@ class MainForm extends React.Component {
       teamList: {
         _meta: {},
         data: [],
-      }
-    }
+      },
+      serviceCityList: [],
+    };
     this.form = props.form;
     let { city_code, city_name } = window.currentAppVendorInfo;
     const { vendor_id } = window.currentAppAccountInfo;
@@ -52,7 +53,7 @@ class MainForm extends React.Component {
 
 
   componentWillReceiveProps = (nextProps) => {
-    const { details, getCourierDetail, teamList } = nextProps;
+    const { details, getCourierDetail, teamList, serviceCityList } = nextProps;
     const { courier_detail } = details;
     const { teams_info } = getCourierDetail;
     const initTeamList = [];
@@ -67,6 +68,7 @@ class MainForm extends React.Component {
     }
     this.setState({
       teamList: teamList,
+      serviceCityList: serviceCityList,
     })
   };
 
@@ -81,10 +83,10 @@ class MainForm extends React.Component {
         return;
       } else {
         let values = form.getFieldsValue();
-        const { city_code } = account_detail;
+        /*const { city_code } = account_detail;*/
         const { id, area_id } = courier_detail;
         values.hired_date = values.hired_date.replace(/-/g, '');
-        didSubmit({ ...values, courier_id: id, city_code });
+        didSubmit({ ...values, courier_id: id });
       }
       ;
     });
@@ -99,7 +101,26 @@ class MainForm extends React.Component {
         backgroundImage: `url(${_path})`,
       }
     };
-  }
+  };
+
+  editCityChange = (value) => {
+    const { dispatch } =this.props;
+    const { form } =this;
+    /*form.resetFields([{'team_list':''}]);*/
+    form.setFieldsValue( { 'team_list': [] });
+    /*this.setState({
+      initTeamList: '',
+    });*/
+    const _accountInfo = window.getStorageItem('accountInfo') || '{}';
+    const { vendor_id } = JSON.parse(_accountInfo);
+    dispatch({
+      type: 'business_courier/getTeam',
+      payload: {
+        vendor_id,
+        city_code: value,
+      }
+    })
+  };
 
   render() {
     const { getFieldProps, validateFields, getFieldsValue } = this.form;
@@ -127,13 +148,22 @@ class MainForm extends React.Component {
         <div style={{ height: 16 }}></div>
         <Row>
           <Col sm={12}>
-            <FormItem label="姓名" {...{ "labelCol": { "span": 4 }, "wrapperCol": { "span": 8 } }}>
-              <Input {...getFieldProps("name", {
-                initialValue: courier_detail.name,
-                validate: [
-                  { rules: [{ required: true, message: '请输入姓名' },], trigger: 'onBlur', }
-                ]
-              })}/>
+
+            <FormItem label="城市" {...{ "labelCol": { "span": 4 }, "wrapperCol": { "span": 8 } }}>
+              <Select
+                showSearch
+                optionFilterProp="children"
+                onSelect={this.editCityChange}
+                {...getFieldProps("city_code", {
+                  initialValue: courier_detail.city_code,
+                  validate: [
+                    { rules: [{ required: true, message: '请选择城市' },], trigger: 'onBlur' }
+                  ]
+                })}>
+                {this.state.serviceCityList.map((item, index) => {
+                  return (<Option key={`${item.city_code}`} value={item.city_code}>{item.city_name} </Option>)
+                })}
+              </Select>
             </FormItem>
 
             <FormItem label="手机号" {...{ "labelCol": { "span": 4 }, "wrapperCol": { "span": 8 } }}>
@@ -176,9 +206,19 @@ class MainForm extends React.Component {
             </FormItem>
           </Col>
           <Col sm={12}>
+            <FormItem label="姓名" {...{ "labelCol": { "span": 4 }, "wrapperCol": { "span": 8 } }}>
+              <Input {...getFieldProps("name", {
+                initialValue: courier_detail.name,
+                validate: [
+                  { rules: [{ required: true, message: '请输入姓名' },], trigger: 'onBlur', }
+                ]
+              })}/>
+            </FormItem>
             <FormItem label="所属团队" {...{ "labelCol": { "span": 4 }, "wrapperCol": { "span": 12 } }}>
               <Select
                 multiple
+                showSearch
+                optionFilterProp="children"
                 {...getFieldProps("team_list", {
                   initialValue: initTeamList,
                   validate: [
@@ -248,13 +288,14 @@ MainForm = Form.create()(MainForm);
 
  */
 
-let View = ({ business_courier, dispatch, business_publics }) => {
-  const { getCourierDetail, teamList } = business_courier;
+let View = ({ business_courier, dispatch }) => {
+  const { getCourierDetail, teamList, serviceCityList } = business_courier;
   const FormProps = {
     details: business_courier.list_details,
-    areas: business_publics.areas,
     getCourierDetail,
     teamList,
+    serviceCityList,
+    dispatch,
     handleUpload(params) {
       dispatch({
         type: COURIER.upload,
@@ -277,8 +318,8 @@ let View = ({ business_courier, dispatch, business_publics }) => {
   );
 };
 
-function mapStateToProps({ business_courier, business_publics }) {
-  return { business_courier, business_publics };
+function mapStateToProps({ business_courier }) {
+  return { business_courier };
 };
 
 module.exports = connect(mapStateToProps)(View);

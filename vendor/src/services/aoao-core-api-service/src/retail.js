@@ -19,6 +19,11 @@ export async function getContractSellers(vendor_id, city_code, contract_type, pa
   return request(`contracts/sellers?${qs.stringify(value)}`).then((data) => data.data);
 }
 
+//根据商户类型获取商户列表
+export async function getSellerByType(params) {
+  return request(`contracts/sellers?${qs.stringify(params)}`).then((data) => data.data);
+}
+
 //获取商户详情
 export async function getSellerInfoMessage(params) {
   return request(`sellers/${params.seller_id}`).then((data) => data.data);

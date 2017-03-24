@@ -1,24 +1,23 @@
 
 import React from 'react';
-import { Table, Badge } from 'antd';
+import { Table, Badge, Pagination } from 'antd';
 import { Link } from 'dva/router';
+import { OrderListState, OrderParams } from './../../exports';
 
-import style from './style.less';
+const { rgReg, requestPagerSize, requestPageNumber } = OrderParams;
 
-//优化代码－－－
-const payType = {
-  1: '现金',
-  2: '余额',
-  3: '后付费',
-};
+const {
+  stateTransform,
+  utcToDate,
+} = window.tempAppTool;// 全局变量 来自aoao-core-api-service/src/utils/utils.js
 
 const columns = [{
   title: '订单编号',
-  dataIndex: 'id',
+  dataIndex: 'data',
   key: 'id',
   render: (text, record) => (
     <span>
-      <Link to={{ pathname: '/operation/order/close/detail/', query: { id: record.id, shipmentId: record.shipment_id } }}>{ record.id }</Link>
+      <Link to={{ pathname: '/operation/order/close/detail/', query: { orderId: record.id, shipmentId: record.shipment_id } }}>{ record.org_order_id }</Link>
     </span>
   ),
 }, {
@@ -32,63 +31,101 @@ const columns = [{
   key: 'vendor_name',
   render: (text, record, index) => { return text.supply_vendor_info.name; },
 }, {
-  title: '配送距离',
+  title: '配送距离(km)',
   dataIndex: 'shipment',
   key: 'distance',
-  render: (text, record, index) => { return text.distance; },
+  render: (text, record, index) => { return text.distance / 1000; },
 }, {
   title: '配送费(元)',
   dataIndex: 'shipment',
   key: 'shipping_fee',
-  render: (text, record, index) => { return text.shipping_fee; },
+  render: (text, record, index) => { return text.shipping_fee / 100; },
 }, {
   title: '结算方式',
   dataIndex: 'shipment',
   key: 'pay_type',
-  render: (text, record, index) => { return payType[text.pay_type]; },
+  render: (text, record, index) => { return stateTransform('pay_type', text.pay_type); },
 }, {
   title: '分单状态',
   dataIndex: 'state',
   key: 'state',
-  render: (text, record, index) => { return '异常'; },
+  render: (text, record, index) => {
+    const orderState = text === OrderListState.exception ? '异常' : '其他';
+    return orderState;
+  },
 }, {
-  title: '订单金额',
+  title: '订单金额(元)',
   dataIndex: 'shipment',
   key: 'o3_order_amount',
-  render: (text, record, index) => { return text.o3_order_amount; },
+  render: (text, record, index) => { return text.o3_order_amount / 100; },
 }, {
   title: '下单时间',
   dataIndex: 'created_at',
   key: 'created_at',
+  render: (text, record, index) => {
+    const date = utcToDate(text);
+    date.time.length = 2;
+    return `${date.date.join('-')}  ${date.time.join(':')}`;
+  },
 }, {
   title: '期望送达',
   dataIndex: 'shipment',
   key: 'plan_shipping_time',
-  render: (text, record, index) => { return text.plan_shipping_time; },
+  render: (text, record, index) => {
+    const date = utcToDate(text.shipping_time);
+    date.time.length = 2;
+    return `${date.date.join('-')}  ${date.time.join(':')}`;
+  },
 }];
 
 class StateTable extends React.Component {
   constructor(props) {
     super();
 
-    //初始化商家列表
+    //初始化商家列表---状态
     this.state = {
       closeOrderList: props.closeOrderList,
+      closeMeta: props.closeMeta,
+      current: props.current,
     };
+
+    //初始化商家列表－方法
+    this.private = {
+      onPageChange: props.onPageChange,
+    }
   }
 
   componentWillReceiveProps = (nextProps) => {
     //update 商家列表
     this.setState({
       closeOrderList: nextProps.closeOrderList,
+      closeMeta: nextProps.closeMeta,
+      current: nextProps.current,
     });
   };
 
-  render() {
-    const { closeOrderList } = this.state;
+  //update 页码
+  onPageChange = (page) => {     //当前页
+    this.setState({ current: page });
+    this.private.onPageChange(page);
+  };
 
+  render() {
+    const { onPageChange } = this;
+    const { closeOrderList, closeMeta, current } = this.state;
+    const totalNum = closeMeta && closeMeta.result_count > 0 ? closeMeta.result_count : 0;
+    const pagination = {
+      total: totalNum,
+      current,
+      pageSize: requestPagerSize,
+      onChange: onPageChange,
+    };
+    const paginationShow = totalNum > 0 ? <Pagination className="ant-table-pagination" {...pagination} showTotal={total1 => `共 ${totalNum} 条`} /> : '';
     return (
-      <Table dataSource={closeOrderList} columns={columns} />
+      <div>
+        <Table dataSource={closeOrderList} columns={columns} pagination={false} />
+        { paginationShow }
+      </div>
     );
   }
 }

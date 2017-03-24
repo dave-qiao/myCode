@@ -25,6 +25,9 @@ import {
 import style from '../../style/manage.less';
 import  KnightRulesList from './knightRulesListJoin';
 const [FormItem, Option, TreeNode] = [Form.Item, Select.Option, TreeSelect.TreeNode];
+const data = {
+  area: [],
+}
 
 class OrderSingle extends Component {
   constructor(props) {
@@ -45,14 +48,40 @@ class OrderSingle extends Component {
         dataIndex: 'is_set_courier_delivery_rule',
         render: (text, record) => {
           return (
-            <span>{text == true ? '设置' : '未设置'}</span>
+            <span>{text == true ? '已设置' : '未设置'}</span>
           )
+        },
+        filters: [
+          { text: '未设置', value: false },
+          { text: '已设置', value: true },
+        ],
+        filterMultiple: false,
+        onFilter: (value, record) => {
+          return `${record.is_set_courier_delivery_rule}` === value;
         }
       },],
       rightTitle: '',
       areaRecord: [],
+      areaValue: [],
+      serviceCityList: [],
     }
   }
+
+  // 接受 model 层 props
+  componentWillReceiveProps = (nextProps) => {
+    const { areaList } = nextProps.retailSellerInfo;
+    const { serviceCityList } = nextProps.manageRetail
+    const areaValue = areaList;
+    if (areaValue.data != data.area) {
+      this.setState({
+        areaValue: areaValue.data ? areaValue.data : [],
+      })
+    }
+    data.area = areaValue.data;
+    this.setState({
+      serviceCityList: serviceCityList,
+    })
+  };
 
   showModal = ()=> {
     const { dispatch } = this.props;
@@ -269,6 +298,58 @@ class OrderSingle extends Component {
     })
   };
 
+  // 区域关键字搜索
+  areaSearch = (value) => {
+    let searchIndex = 0;
+    if (value == '0' || value == '' || value === undefined) {       //枚举 0:全部区域
+      this.setState({
+        areaValue: data.area,
+      })
+    } else {
+      data.area.forEach(function (item, index) {
+        if (item.id == value) {
+          searchIndex = index;
+          return;
+        }
+      });
+
+      let areaChangeValue = data.area[searchIndex];
+      this.setState({
+        areaValue: [areaChangeValue],
+      })
+    }
+  };
+
+  // 城市筛选区域
+  cityChange = (value) => {
+    const { dispatch } = this.props;
+    const limit = 1000;
+    const city_code = value;
+    const _accountInfo = window.getStorageItem('accountInfo') || '{}';
+    const { vendor_id } = JSON.parse(_accountInfo);
+    const contract_id = sessionStorage.getItem('contractId');
+    const vendorId = sessionStorage.getItem('vendorId');
+    const state = 100;//区域状态 100启用 -100 禁用
+    const relate_type = 20; // 区域类型 10 直营 20 加盟
+    const is_filter_sub_area = true; //是否过滤子区
+    const is_set_courier_delivery_rule = true; //是否返回设置骑士分单规则状态
+    // 区域列表
+    dispatch({
+      type: 'getAreaE',
+      payload: {
+        vendor_id: vendorId,
+        supply_vendor_id: vendor_id,
+        city_code,
+        state,
+        relate_type,
+        is_filter_sub_area,
+        is_set_courier_delivery_rule,
+        contract_id,
+        limit
+      },
+    });
+  };
+
   render() {
     const _accountInfo = window.getStorageItem('accountInfo') || '{}';
     const userInfo = window.getStorageItem('userInfo') || '{}';
@@ -342,6 +423,34 @@ class OrderSingle extends Component {
       })
     }
 
+    // 表头数据
+    const columns = [{
+      title: <span>服务区域 <br/><span style={{color:'#58e2c2'}}>总计({data.area.length})</span></span>,
+      dataIndex: 'name',
+      width: '50%',
+      render: (text, record) => {
+        return (
+          <span>{ record.name ? record.name : '' }</span>
+        )
+      }
+    }, {
+      title: '分单规则',
+      dataIndex: 'is_set_courier_delivery_rule',
+      render: (text, record) => {
+        return (
+          <span>{text == true ? '已设置' : '未设置'}</span>
+        )
+      },
+      filters: [
+        { text: '未设置', value: false },
+        { text: '已设置', value: true },
+      ],
+      filterMultiple: false,
+      onFilter: (value, record) => {
+        return `${record.is_set_courier_delivery_rule}` === value;
+      }
+    },]
+
     return (
       <div className="con-body main-list">
         <div className={style.reset}>
@@ -364,7 +473,40 @@ class OrderSingle extends Component {
                 </Col>
               </div>
               <div className={`bd-content ${style.inLine}`}>
-                <Table columns={this.state.columns} dataSource={areaValue.data}
+                <Select showSearch
+                        style={{ width: '90%', marginBottom: 16 }}
+                        placeholder="请输入城市"
+                        optionFilterProp="children"
+                        notFoundContent="暂无数据"
+                        defaultValue={''}
+                        onChange={this.cityChange}>
+                  <Option value="" key="cityall">全部</Option>
+                  {
+                    this.state.serviceCityList.map((item, index)=> {
+                      return (
+                        <Option value={item.city_code} key={`${item.city_code}${index}`}>{item.city_name}</Option>
+                      )
+                    })
+                  }
+                </Select>
+                <Select showSearch
+                        allowClear
+                        style={{ width: '90%', marginBottom: 16 }}
+                        placeholder="请输入搜索内容"
+                        optionFilterProp="children"
+                        notFoundContent="暂无数据"
+                        defaultValue={'0'}
+                        onChange={this.areaSearch}>
+                  <Option value={'0'} key="areaall">全部</Option>
+                  {
+                    data.area.map(function (item, index) {
+                      return (
+                        <Option value={item.id} key={`search${item.id}`}>{item.name}</Option>
+                      )
+                    })
+                  }
+                </Select>
+                <Table columns={columns} dataSource={this.state.areaValue}
                        onRowClick={this.onRowClick} pagination={false} scroll={{ y: 600 }}/>
               </div>
             </Col>
@@ -409,7 +551,7 @@ class OrderSingle extends Component {
                                 {
                                   treeList.map(function (item, index) {
                                     return (
-                                      <Option value={item.id} key={item.id}>{item.name}</Option>
+                                      <Option value={item.id} key={`${index}${item.id}`}>{item.name}</Option>
                                     )
                                   })
                                 }
@@ -426,7 +568,7 @@ class OrderSingle extends Component {
                           </Col>
                           <Col sm={24}>
                             <FormItem label="规则参数:" {...{ "labelCol": { "span": 8 }, "wrapperCol": { "span": 12 } }}>
-                              <span style={{color:'orange'}}>以下选项至少选择一项（团队／骑士)</span>
+                              <span style={{ color: 'orange' }}>以下选项至少选择一项（团队／骑士)</span>
                             </FormItem>
                           </Col>
                           <Col sm={24}>
@@ -448,7 +590,7 @@ class OrderSingle extends Component {
                                 {
                                   teamList.data.map(function (item, index) {
                                     return (
-                                      <Option value={item.id} key={index}>{item.name}</Option>
+                                      <Option value={item.id} key={`${index}${item.id}`}>{item.name}</Option>
                                     )
                                   })
                                 }
@@ -528,7 +670,7 @@ class OrderSingle extends Component {
 
 OrderSingle = Form.create()(OrderSingle);
 
-function mapStateToProps({ retailSellerInfo }) {
-  return { retailSellerInfo }
+function mapStateToProps({ retailSellerInfo, manageRetail }) {
+  return { retailSellerInfo, manageRetail }
 }
 module.exports = connect(mapStateToProps)(OrderSingle);

@@ -96,7 +96,7 @@ module.exports = {
         }
 
         // 监测路由进入加盟项目
-        if (pathname === '/business/manage/affiliates') {
+        if (pathname === '/business/manage/affiliate') {
           const city_codes = city_code;
           const contract_type = 20;//签约类型为加盟
           dispatch({
@@ -148,6 +148,11 @@ module.exports = {
               limit,
             },
           });
+
+          dispatch({
+            type: 'getServiceCityListE',
+            payload: { vendor_id }
+          })
         }
 
       });
@@ -255,10 +260,10 @@ module.exports = {
     // 服务商可服务城市
     getServiceCityListR(state, action){
       const { serviceCityList } =state;
-      Object.assign(serviceCityList, action.payload);
+      /*Object.assign(serviceCityList, action.payload);*/
       return {
         ...state,
-        serviceCityList,
+        serviceCityList: action.payload,
       }
     },
   },

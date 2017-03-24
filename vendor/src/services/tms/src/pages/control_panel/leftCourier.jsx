@@ -20,13 +20,18 @@ class leftCourier extends Component {
 
 
   render() {
+    // 从props里面获取信息
+    const {couriers, stateChange, selectedLen,showModal} = this.props;
     const {filteredValue} = this.state;
+
+    const courierNum = couriers.data.length
     // 表格的列
     const columns = [
       {
-        title: '骑士',
+        title: `骑士(${courierNum})`,
         dataIndex: 'name',
         key: 'name',
+        width: '50px',
         filteredValue: filteredValue,
         onFilter: (value, record) => record.name.indexOf(value) === 0,
       }, {
@@ -56,9 +61,7 @@ class leftCourier extends Component {
         }
       }
     ];
-    // 从props里面获取信息
-    const {couriers, stateChange, selectedLen,showModal} = this.props;
-    console.log(couriers.data,'data-data-data-data');
+    
     // 从this里面获取信息
     const {setNamefilter} = this;
     return (

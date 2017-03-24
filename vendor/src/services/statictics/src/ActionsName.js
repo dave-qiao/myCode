@@ -12,7 +12,8 @@ module.exports =  {
     queryList:"shipments_detail_down/querys",//运单详情下载的查询
     find: 'shipments_detail/querys',//运单详情查询
     downUrl:'shipments_detail/down',  //下载的url
-
+    sellerList: 'shipments_detail/getSellersByType', //商家列表
+    clearSeller: 'shipments_detail/clearSellers', //清空商家列表
   },
   'COMPASS':{//数据罗盘
     find:'compass/query',

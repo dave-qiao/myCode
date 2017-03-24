@@ -185,7 +185,7 @@ class View extends Component {
             <Link to="/business/manage/retail">直营项目</Link>
           </Button>
           <Button>
-            <Link to="/business/manage/affiliates">加盟项目</Link>
+            <Link to="/business/manage/affiliate">加盟项目</Link>
           </Button>
         </div>
         <div>
@@ -194,7 +194,11 @@ class View extends Component {
               <Row type="flex">
                 <Col sm={4}>
                   <FormItem label="城市" {...{ "labelCol": { "span": 6 }, "wrapperCol": { "span": '' } }}>
-                    <Select placeholder="请选择城市" style={{ width: "70%" }} defaultValue={getCityNameByCode(city_code)}
+                    <Select showSearch
+                            placeholder="请选择城市"
+                            optionFilterProp="children"
+                            style={{ width: "70%" }}
+                            defaultValue={getCityNameByCode(city_code)}
                             onChange={this.cityChange}>
                       {
                         serviceCityList.map(function (item, index) {

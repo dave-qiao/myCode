@@ -32,7 +32,7 @@ const columns = [
     "key": "verify_state"
   }
 ];
-let View = ({ business_courier, business_publics, dispatch }) => {
+let View = ({ business_courier, dispatch }) => {
   const { list_details } = business_courier;
 
   //account_detail 账户先关详情 courier_detail 骑士相关详情
@@ -201,12 +201,12 @@ let View = ({ business_courier, business_publics, dispatch }) => {
             <Row>
               <Col sm={12}>
                 <FormItem label="最后一次上线时间" {...{ "labelCol": { "span": 6 }, "wrapperCol": { "span": 12 } }}>
-                  {last_accepted_at.indexOf('NaN') > -1 ? '--' : last_accepted_at}
+                  {last_workon_at.indexOf('NaN') > -1 ? '--' : last_workon_at}
                 </FormItem>
               </Col>
               <Col sm={12}>
                 <FormItem label="最后一次接单时间" {...{ "labelCol": { "span": 6 }, "wrapperCol": { "span": 12 } }}>
-                  {last_workon_at.indexOf('NaN') > -1 ? '--' : last_workon_at}
+                  {last_accepted_at.indexOf('NaN') > -1 ? '--' : last_accepted_at}
                 </FormItem>
               </Col>
             </Row>
@@ -230,8 +230,8 @@ let View = ({ business_courier, business_publics, dispatch }) => {
   );
 };
 
-function mapStateToProps({ business_courier, business_publics }) {
-  return { business_courier, business_publics };
+function mapStateToProps({ business_courier }) {
+  return { business_courier };
 };
 
 module.exports = connect(mapStateToProps)(View);

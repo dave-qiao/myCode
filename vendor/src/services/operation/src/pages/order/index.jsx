@@ -6,10 +6,11 @@ import OrderStatistics from './components/orderStatistics';
 import FilterComponent from './components/filter';
 import StateTable from './components/stateTable';
 import style from './components/style.less';
+import { OrderParams } from './../exports';
 
 const moment = require('moment');
 
-const rgReg = /\-/g;
+const { rgReg, requestPagerSize, requestPageNumber } = OrderParams;
 
 class Operation extends React.Component {
   constructor(props) {
@@ -17,8 +18,12 @@ class Operation extends React.Component {
     const { operationOrder } = props;
 
     //订单状态
-    const { totalOrderStatistics, cityList, sellerOrderList } = operationOrder;
+    const { totalOrderStatistics, cityList, sellerOrderList, sellerMeta } = operationOrder;
     const today = moment().format().replace(rgReg, '').substring(0, 8);
+
+    //获取账户信息
+    const { vendor_id } = window.currentAppAccountInfo;
+    const { city_name, city_code } = window.currentAppUserInfo;
 
     //初始化状态
     this.state = {
@@ -27,15 +32,10 @@ class Operation extends React.Component {
       totalOrderStatistics,                            //订单状态
       cityList,                                        //城市列表
       sellerOrderList,                                 //商家订单列表
+      sellerMeta,
       date: today,                                     //日期
+      current: requestPageNumber,                      //当前页
     };
-
-    //获取账户信息
-    const { vendor_id } = window.currentAppAccountInfo;
-    const { city_name, city_code } = window.currentAppUserInfo;
-
-    //存储日期
-    window.localStorage.setItem('date', today);
 
     //私有变量属性－－－不要把方法直接挂在this上，固定不变的属性放在 private中
     this.private = {
@@ -44,19 +44,27 @@ class Operation extends React.Component {
     };
   }
 
+  //请求列表数据
+  componentDidMount = () => {
+    const { fetchOrderMethod } = this;
+    fetchOrderMethod();
+  };
+
+  //update State
   componentWillReceiveProps = (nextProps) => {
     const { operationOrder } = nextProps;
-    const { totalOrderStatistics, cityList, sellerOrderList } = operationOrder;
-    const { cityCode, cityName, date } = this.state;
-
+    const { totalOrderStatistics, cityList, sellerOrderList, sellerMeta } = operationOrder;
+    const { cityCode, cityName, date, current } = this.state;
     //状态发生变化时－重新赋值
     this.setState({
       totalOrderStatistics,                            //订单状态
       cityList,                                        //城市列表
       sellerOrderList,                                 //商家订单列表
+      sellerMeta,
       date,                                            //日期
       cityCode,
       cityName,
+      current,
     });
   };
 
@@ -68,34 +76,69 @@ class Operation extends React.Component {
   //选择日期－－－同上
   onChangeDate = (date) => {
     this.setState({ date });
-    window.localStorage.setItem('date', date);
   };
 
   //搜索---触发商家列表请求
   onHandleSearch = () => {
-    const AccountSet = JSON.parse(window.localStorage.getItem('accountInfo') || '{}');
-    //const UserSet = JSON.parse(window.localStorage.getItem('userInfo') || '{}');
-    const date = window.localStorage.getItem('date') || ' ';
-    const { cityCode } = this.state;
+    const { fetchOrderMethod } = this;
+    fetchOrderMethod();
+  };
+
+  //update 页码
+  onPageChange = (page) => {
+    this.setState({ current: page });
+
+    //分页请求
+    const AccountSet = JSON.parse(window.getStorageItem('accountInfo') || '{}');
+    const { date, cityCode } = this.state;
     const { vendor_id } = AccountSet;
     const { dispatch } = this.props;
-
     //请求商家列表
     dispatch({
       type: 'fetchSellerOrderList',
-      payload: { vendorId: vendor_id, cityCode, shippingDate: date },
-    },
+      payload: {
+        vendorId: vendor_id,
+        cityCode,
+        shippingDate: date,
+        page,                        //当前页码
+        limit: requestPagerSize,     //分页
+        sort: '{created_at: -1}',    //排序按照创建时间排序：－1代表倒叙排列；默认按照 最早创建的显示在最前面。
+      },
+    })
+  };
+
+  //请求
+  fetchOrderMethod = () => {
+    const AccountSet = JSON.parse(window.getStorageItem('accountInfo') || '{}');
+    const { date, cityCode, current } = this.state;
+    const { vendor_id } = AccountSet;
+    const { dispatch } = this.props;
 
     //请求订单状态统计
     dispatch({
       type: 'fetchTotalOrderStatistics',
-      payload: { vendorId: vendor_id, cityCode, shippingDate: date },
-    }))
+      payload: {
+        vendorId: vendor_id,
+        cityCode,
+        shippingDate: date },
+    });
+
+    //请求商家列表
+    dispatch({
+      type: 'fetchSellerOrderList',
+      payload: {
+        vendorId: vendor_id,
+        cityCode,
+        shippingDate: date,
+        page: current,               //当前页码
+        limit: requestPagerSize,     //分页
+        sort: '{created_at: -1}',    //排序按照创建时间排序：－1代表倒叙排列；默认按照 最早创建的显示在最前面。
+      },
+    })
   };
 
   //选择器-－－－上
   renderFilterComponent = () => {
-
     const { cityCode, cityList, cityName, date } = this.state;
     const { onChangeCity, onChangeDate, onHandleSearch } = this;
     const props = {
@@ -105,7 +148,7 @@ class Operation extends React.Component {
       onChangeCity,   //选择城市的事件回调
       onChangeDate,   //选择日期的时间回调
       onHandleSearch, //搜索回调
-      date,           //today
+      date,           //默认值：today
     };
 
     return (
@@ -117,7 +160,7 @@ class Operation extends React.Component {
   renderStateDashboardComponent = () => {
     const { totalOrderStatistics } = this.state;
     const props = {
-      totalOrderStatistics,     //订单状态
+      orderStatistics: totalOrderStatistics,     //订单状态
     };
     return (
       <OrderStatistics {...props} />
@@ -126,9 +169,15 @@ class Operation extends React.Component {
 
   //状态数据列表－－－下
   renderStateTableComponent = () => {
-    const { sellerOrderList } = this.state;
+    const { onPageChange, requestPageNumber } = this;
+    const { sellerOrderList, sellerMeta, date, cityCode } = this.state;
     const props = {
       sellerOrderList,
+      sellerMeta,
+      date,
+      onPageChange,
+      requestPageNumber,
+      cityCode,
     };
     return (
       <StateTable {...props} />
@@ -150,7 +199,7 @@ class Operation extends React.Component {
             {/* 渲染状态数据面板 */}
             <div className="bd-content">{renderStateDashboardComponent()}</div>
           </Col>
-          <Col className={style.center} >
+          <Col>
             {/* 渲染状态数据列表 */}
             <div className="bd-content">{renderStateTableComponent()}</div>
           </Col>

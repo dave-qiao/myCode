@@ -220,6 +220,12 @@ module.exports = {
             type: 'business_courier/getAudit_logs',
             payload: location.query
           });
+
+          // 获取服务商可以服务的城市
+          dispatch({
+            type: 'getServiceCityListCourierE',
+            payload: { vendor_id },
+          });
         }
 
       });
@@ -281,8 +287,8 @@ module.exports = {
     },
     //待审核骑士查询
     *readyCourier(params) {
-      const { vendor_id, verify_state } = params.payload;
-      const resultReadyCourier = yield call(readyCourierState, vendor_id, verify_state);
+      const { vendor_id, verify_state, city_code } = params.payload;
+      const resultReadyCourier = yield call(readyCourierState, vendor_id, verify_state, city_code);
       if (resultReadyCourier.err) {
         const _response = resultReadyCourier.err.response.json();
         _response.then((err_obj)=> {
@@ -290,7 +296,7 @@ module.exports = {
         });
       } else {
         yield put({
-          type: 'readyCourierState',
+          type: 'readyCourierStateR',
           payload: resultReadyCourier
         })
       }
@@ -326,6 +332,7 @@ module.exports = {
       //跳转到详情页
       // toDetail(courier_id);
     },
+
     // 骑士审核
     *['business_courier/approve_verify'](params){
       let { payload } = params;
@@ -349,6 +356,7 @@ module.exports = {
         toList();
       }
     },
+    
     // 获取骑士日志信息
     *['business_courier/getAudit_logs'](params){
       const { id } = params.payload;
@@ -497,7 +505,13 @@ module.exports = {
       const result = yield call(addTeam, vendor_id, name, city_code);
       if (result.created_at) {
         message.success('团队添加成功');
-        toList();
+        const limit = 500;
+        const sort = '{"created_at":-1}';
+        const teamList = yield call(getTeams, vendor_id, city_code, limit, sort);
+        yield put({
+          type: 'getTeams',
+          payload: teamList
+        })
       }
     },
     //团队中增加成员
@@ -657,7 +671,7 @@ module.exports = {
       }
     },
     //待审核骑士查询
-    readyCourierState(state, action) {
+    readyCourierStateR(state, action) {
       const readyListTables = state;
       const list_tables = state;
       list_tables.data = readyListTables.data;

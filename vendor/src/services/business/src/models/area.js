@@ -190,10 +190,12 @@ module.exports = {
     * resetUpdateAreaCallback() {
       yield put({ type: 'resetUpdateAreaCallback' });
     },
+
     //重置创建区域后的回调
     * resetCreateAreaCallback() {
       yield put({ type: 'resetCreateAreaCallback' });
     },
+
     //重置发布成功后的回调
     * resetPublishAreaCallback() {
       yield put({ type: 'resetPublishAreaCallback' });

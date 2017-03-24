@@ -20,7 +20,13 @@ import {createListParam} from './utils/utils';
       body: JSON.stringify(params)
     });
   }
-  //其实查询
+
+  //推单记录查询
+  export async function tms_push_order_find(params) {
+    return request(`contest_queues/?${qs.stringify(params)}`);
+  };
+
+  //骑士查询
   export async function tms_couriers_find(params) {
     return request(`couriers/?${qs.stringify(params)}`);
   };

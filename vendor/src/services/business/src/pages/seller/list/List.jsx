@@ -38,16 +38,20 @@ const List = ({ data, _meta, page, loading, onPageChange }) => {
     },
     {
       title: '签约状态',
-      dataIndex: 'sign_state',
-      key: 'sign_state',
+      dataIndex: 'contract_state',
+      key: 'contract_state',
       render: (text) => {
-        // return stateTransform('seller_state',text);
+        const state = text === 100 ? '签约' : text === -100 ? '解约' : ''
+        return state;
       },
     },
     {
       title: '注册手机',
       dataIndex: 'mobile',
       key: 'mobile',
+      render: (text) => {
+        return text || '';
+      },
     },
     {
       title: '注册日期',
