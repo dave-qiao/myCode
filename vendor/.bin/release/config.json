@@ -1,8 +1,0 @@
-{
-  "index.html": {
-    "access_key": "3e04a3cfa3a76682bd723b086b79763d",
-    "publisher_key": "6c1034fa711240a0ff971b0998b0134e",
-    "env":"prod",
-    "prod":"https://seaguard.o3cloud.cn/1.0/"
-  }
-}
